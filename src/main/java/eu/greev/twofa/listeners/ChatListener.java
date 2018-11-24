@@ -14,6 +14,7 @@ public class ChatListener implements Listener {
     String waitingForAuthCode = Main.getInstance().config.getString("messages.waitingforauthcode");
     String errorOcurred = Main.getInstance().config.getString("messages.errorocurred");
     String loginSuccessful = Main.getInstance().config.getString("messages.loginsuccessful");
+    String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -29,7 +30,7 @@ public class ChatListener implements Listener {
                         event.setCancelled(true);
                         return;
                     } else {
-                        player.sendMessage(waitingForAuthCode.replace("&", "§"));
+                        player.sendMessage(codeIsInvalid.replace("&", "§"));
                     }
                 } catch (GeneralSecurityException e) {
                     e.printStackTrace();

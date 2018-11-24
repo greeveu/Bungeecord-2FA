@@ -22,6 +22,7 @@ public class JoinListener extends Plugin implements Listener {
                         String lastip = MySQLMethodes.getLastIP(uuid);
                         if(lastip.equals("just_activated")){
                             player.sendMessage(needToActivate.replace("&", "§"));
+                            return;
                         }
                         if (lastip.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
                             return;

@@ -12,7 +12,7 @@ public class MySQLMethodes {
 
     public static void createTable() {
         try {
-            mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(45) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");
+            mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(50) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -80,10 +80,7 @@ public class MySQLMethodes {
 
     public static void removePlayer(String uuid) {
         try {
-            String sql = "DELETE FROM `2fa_players` WHERE `uuid` = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(uuid);
-            mySQL.preparedStatementUpdate(sql, list);
+            mySQL.updateQuery("DELETE FROM `2fa_players` WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -91,23 +88,15 @@ public class MySQLMethodes {
 
     public static void setIP(String uuid, String ip) {
         try {
-            String sql = "UPDATE `2fa_players` SET `last_ip` = ? WHERE `uuid` = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(ip);
-            list.add(uuid);
-            mySQL.preparedStatementUpdate(sql, list);
+            mySQL.updateQuery("UPDATE `2fa_players` SET `last_ip` = '" + ip + "' WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void setSecret(String uuid, String ip) {
+    public static void setSecret(String uuid, String secret) {
         try {
-            String sql = "UPDATE `2fa_players` SET `secret` = ? WHERE `uuid` = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(ip);
-            list.add(uuid);
-            mySQL.preparedStatementUpdate(sql, list);
+            mySQL.updateQuery("UPDATE `2fa_players` SET `secret` = '" + secret + "' WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }

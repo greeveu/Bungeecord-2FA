@@ -4,6 +4,10 @@ import eu.greev.twofa.Main;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 
@@ -21,6 +25,7 @@ public class TwoFACommand extends Command {
     String errorOcurred = Main.getInstance().config.getString("messages.errorocurred");
     String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
     String successfulActivated = Main.getInstance().config.getString("messages.successfulcctivated");
+    String hovertext = Main.getInstance().config.getString("messages.hovertext");
 
     public TwoFACommand() {
         super("2fa");
@@ -110,8 +115,11 @@ public class TwoFACommand extends Command {
                         return;
                     }
                     String secret = Main.getInstance().twoFactorAuthUtil.generateBase32Secret();
-                    MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated"); //TODO: Maybe just already activate the account from the beginning? But then he cant directly check if its working. //player.getPendingConnection().getAddress().getAddress().toString()
-                    player.sendMessage(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(servername + player.getName(), secret)));
+                    MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
+                    TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(servername + player.getName(), secret)));
+                    message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().twoFactorAuthUtil.qrImageUrl(servername + player.getName(), secret)));
+                    message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext.replace("&", "§")).create()));
+                    player.sendMessage(message);
                 }
         );
     }
