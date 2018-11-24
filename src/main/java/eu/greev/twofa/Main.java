@@ -1,7 +1,10 @@
 package eu.greev.twofa;
 
 import eu.greev.twofa.commands.TwoFACommand;
-import eu.greev.twofa.listeners.*;
+import eu.greev.twofa.listeners.ChatListener;
+import eu.greev.twofa.listeners.JoinListener;
+import eu.greev.twofa.listeners.QuitListener;
+import eu.greev.twofa.listeners.ServerSwitchListener;
 import eu.greev.twofa.utils.ConfigHelper;
 import eu.greev.twofa.utils.MySQL;
 import eu.greev.twofa.utils.MySQLMethodes;
@@ -19,6 +22,7 @@ public final class Main extends Plugin {
     private static Main main;
     public MySQL mySQL;
     public List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
+    public List<ProxiedPlayer> firstLogin = new ArrayList<>();
     public YamlFile config;
     private ConfigHelper configHelper = new ConfigHelper();
     public TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();

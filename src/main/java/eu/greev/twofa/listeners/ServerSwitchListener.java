@@ -13,6 +13,10 @@ public class ServerSwitchListener implements Listener {
     public void onSwitch(ServerConnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
         if (Main.getInstance().waitingForAuth.contains(player)) {
+            if (Main.getInstance().firstLogin.contains(player)) {
+                Main.getInstance().firstLogin.remove(player);
+                return;
+            }
             player.sendMessage(waitingForAuthCode.replace("&", "§"));
             event.setCancelled(true);
         }
