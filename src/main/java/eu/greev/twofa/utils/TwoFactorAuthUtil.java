@@ -120,9 +120,9 @@ public class TwoFactorAuthUtil {
      */
     public String qrImageUrl(String keyId, String secret) {
         StringBuilder sb = new StringBuilder(128);
-        sb.append("https://chart.googleapis.com/chart");
-        sb.append("?chs=200x200&cht=qr&chl=200x200&chld=M|0&cht=qr&chl=");
-        sb.append("otpauth://totp/").append(keyId).append("%3Fsecret%3D").append(secret);
+        sb.append("https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=");
+        sb.append("otpauth://totp/").append(keyId);
+        sb.append("?secret=").append(secret).append("&algorithm=SHA1&digits=6&period=30");
         return sb.toString();
     }
 
