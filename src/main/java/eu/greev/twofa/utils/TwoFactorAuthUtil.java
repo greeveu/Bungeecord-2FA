@@ -1,20 +1,21 @@
 package eu.greev.twofa.utils;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Random;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
 /**
  * Two factor Java implementation for the Time-based One-Time Password (TOTP) algorithm.
- *
+ * <p>
  * See: https://github.com/j256/java-two-factor-auth
- *
+ * <p>
  * Copyright 2015, Gray Watson
- *
+ * <p>
  * Permission to use, copy, modify, and/or distribute this software for any purpose with or without fee is hereby
  * granted provided that the above copyright notice and this permission notice appear in all copies. THE SOFTWARE IS
  * PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
@@ -27,9 +28,13 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class TwoFactorAuthUtil {
 
-    /** default time-step which is part of the spec, 30 seconds is default */
+    /**
+     * default time-step which is part of the spec, 30 seconds is default
+     */
     public static final int TIME_STEP_SECONDS = 30;
-    /** set to the number of digits to control 0 prefix, set to 0 for no prefix */
+    /**
+     * set to the number of digits to control 0 prefix, set to 0 for no prefix
+     */
     private static int NUM_DIGITS_OUTPUT = 6;
 
     private final String blockOfZeros;
@@ -61,9 +66,9 @@ public class TwoFactorAuthUtil {
 
     /**
      * Return the current number to be checked. This can be compared against user input.
-     *
+     * <p>
      * WARNING: This requires a system clock that is in sync with the world.
-     *
+     * <p>
      * For more details of this magic algorithm, see:
      * http://en.wikipedia.org/wiki/Time-based_One-time_Password_Algorithm
      */
@@ -115,15 +120,20 @@ public class TwoFactorAuthUtil {
     /**
      * Return the QR image url thanks to Google. This can be shown to the user and scanned by the authenticator program
      * as an easy way to enter the secret.
-     *
+     * <p>
      * NOTE: this must be URL escaped if it is to be put into a href on a web-page.
      */
     public String qrImageUrl(String keyId, String secret) {
         StringBuilder sb = new StringBuilder(128);
-        sb.append("https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=");
+        sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
         sb.append("otpauth://totp/").append(keyId);
         sb.append("?secret=").append(secret).append("&algorithm=SHA1&digits=6&period=30");
-        return sb.toString();
+        try {
+            return URLEncoder.encode(sb.toString(), "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 
     /**
@@ -173,12 +183,12 @@ public class TwoFactorAuthUtil {
              * There are probably better ways to do this but this seemed the most straightforward.
              */
             switch (which) {
-                case 0 :
+                case 0:
                     // all 5 bits is top 5 bits
                     working = (val & 0x1F) << 3;
                     which = 1;
                     break;
-                case 1 :
+                case 1:
                     // top 3 bits is lower 3 bits
                     working |= (val & 0x1C) >> 2;
                     result[resultIndex++] = (byte) working;
@@ -186,12 +196,12 @@ public class TwoFactorAuthUtil {
                     working = (val & 0x03) << 6;
                     which = 2;
                     break;
-                case 2 :
+                case 2:
                     // all 5 bits is mid 5 bits
                     working |= (val & 0x1F) << 1;
                     which = 3;
                     break;
-                case 3 :
+                case 3:
                     // top 1 bit is lowest 1 bit
                     working |= (val & 0x10) >> 4;
                     result[resultIndex++] = (byte) working;
@@ -199,7 +209,7 @@ public class TwoFactorAuthUtil {
                     working = (val & 0x0F) << 4;
                     which = 4;
                     break;
-                case 4 :
+                case 4:
                     // top 4 bits is lowest 4 bits
                     working |= (val & 0x1E) >> 1;
                     result[resultIndex++] = (byte) working;
@@ -207,12 +217,12 @@ public class TwoFactorAuthUtil {
                     working = (val & 0x01) << 7;
                     which = 5;
                     break;
-                case 5 :
+                case 5:
                     // all 5 bits is mid 5 bits
                     working |= (val & 0x1F) << 2;
                     which = 6;
                     break;
-                case 6 :
+                case 6:
                     // top 2 bits is lowest 2 bits
                     working |= (val & 0x18) >> 3;
                     result[resultIndex++] = (byte) working;
@@ -220,7 +230,7 @@ public class TwoFactorAuthUtil {
                     working = (val & 0x07) << 5;
                     which = 7;
                     break;
-                case 7 :
+                case 7:
                     // all 5 bits is lower 5 bits
                     working |= (val & 0x1F);
                     result[resultIndex++] = (byte) working;
