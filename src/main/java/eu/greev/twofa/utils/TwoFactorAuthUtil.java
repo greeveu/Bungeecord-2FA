@@ -125,15 +125,14 @@ public class TwoFactorAuthUtil {
      */
     public String qrImageUrl(String keyId, String secret) {
         StringBuilder sb = new StringBuilder(128);
-        sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
-        sb.append("otpauth://totp/").append(keyId);
-        sb.append("?secret=").append(secret).append("&algorithm=SHA1&digits=6&period=30");
         try {
-            return URLEncoder.encode(sb.toString(), "UTF-8");
+            sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
+            sb.append("otpauth://totp/").append(URLEncoder.encode(keyId, "UTF-8"));
+            sb.append("?secret=").append(URLEncoder.encode(secret, "UTF-8")).append("&algorithm=SHA1&digits=6&period=30");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return "";
+        return sb.toString();
     }
 
     /**

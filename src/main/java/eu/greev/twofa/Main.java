@@ -2,7 +2,6 @@ package eu.greev.twofa;
 
 import eu.greev.twofa.commands.TwoFACommand;
 import eu.greev.twofa.listeners.ChatListener;
-import eu.greev.twofa.listeners.JoinListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
 import eu.greev.twofa.utils.ConfigHelper;
@@ -43,7 +42,6 @@ public final class Main extends Plugin {
     }
 
     private void registerEvents() {
-        ProxyServer.getInstance().getPluginManager().registerListener(this, new JoinListener());
         ProxyServer.getInstance().getPluginManager().registerListener(this, new ChatListener());
         ProxyServer.getInstance().getPluginManager().registerListener(this, new QuitListener());
         ProxyServer.getInstance().getPluginManager().registerListener(this, new ServerSwitchListener());
