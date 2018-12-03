@@ -28,7 +28,6 @@ public class ServerSwitchListener implements Listener {
                             if (lastip.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
                                 return;
                             }
-                            Main.getInstance().firstLogin.add(player);
                             Main.getInstance().waitingForAuth.add(player);
                             player.sendMessage(authEnabled.replace("&", "§"));
                         }
