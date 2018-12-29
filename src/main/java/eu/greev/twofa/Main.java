@@ -21,7 +21,6 @@ public final class Main extends Plugin {
     private static Main main;
     public MySQL mySQL;
     public List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
-    public List<ProxiedPlayer> firstLogin = new ArrayList<>();
     public YamlFile config;
     private ConfigHelper configHelper = new ConfigHelper();
     public TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
