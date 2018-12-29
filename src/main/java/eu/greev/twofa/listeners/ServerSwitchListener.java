@@ -29,7 +29,6 @@ public class ServerSwitchListener implements Listener {
                     if (lastip.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
                         return;
                     }
-                    Main.getInstance().firstLogin.add(player);
                     player.sendMessage(authEnabled.replace("&", "§"));
                 } else {
                     Main.getInstance().waitingForAuth.remove(player); //Remove the player if he hasnt 2fa enabled
