@@ -23,7 +23,10 @@ public class ChatListener implements Listener {
         if (Main.getInstance().waitingForAuth.contains(player)) {
             if (message.length() == 6) {
                 try {
-                    if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(MySQLMethodes.getSecret(player.getUniqueId().toString())).equals(message)) {
+                    String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+                    if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(message) ||
+                            Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(message) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                            Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                         Main.getInstance().waitingForAuth.remove(player);
                         MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
                         player.sendMessage(loginSuccessful.replace("&", "§"));

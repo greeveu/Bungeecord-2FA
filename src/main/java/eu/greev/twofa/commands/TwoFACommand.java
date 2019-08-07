@@ -66,7 +66,10 @@ public class TwoFACommand extends Command {
                     if (MySQLMethodes.hasRecord(uuid)) {
                         if (MySQLMethodes.getLastIP(uuid).equalsIgnoreCase("just_activated")) {
                             try {
-                                if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(MySQLMethodes.getSecret(uuid)).equals(code)) {
+                                String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+                                if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(code) ||
+                                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                                     MySQLMethodes.setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
                                     player.sendMessage(successfulActivated.replace("&", "§"));
                                 } else {
