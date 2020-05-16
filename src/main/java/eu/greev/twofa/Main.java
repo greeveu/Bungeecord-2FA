@@ -19,10 +19,10 @@ import java.util.List;
 public final class Main extends Plugin {
 
     private static Main main;
+    private final ConfigHelper configHelper = new ConfigHelper();
     public MySQL mySQL;
     public List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
     public YamlFile config;
-    private ConfigHelper configHelper = new ConfigHelper();
     public TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
 
     public static Main getInstance() {
@@ -51,5 +51,6 @@ public final class Main extends Plugin {
     }
 
     @Override
-    public void onDisable() { }
+    public void onDisable() {
+    }
 }

@@ -40,7 +40,7 @@ public class ConfigHelper {
         config.set("messages.errorocurred", "&c[&42FA&c]&7 Es ist ein Fehler aufgetreten. Versuche es bitte erneut, sollte es dann immer noch nicht funktionieren melde dich bitte bei uns im TeamSpeak (greev.eu) oder im Discord (https://discord.greev.eu)");
         config.set("messages.codeisinvalid", "&c[&42FA&c]&7 Der angegebene Code ist ungültig! Bitte überprüfe ihn erneut. Bei Fehlern melde dich bitte bei uns im TeamSpeak (greev.eu) oder im Discord (https://discord.greev.eu)");
         config.set("messages.successfulcctivated", "&c[&42FA&c]&7 Du hast deinen Account erfolgreich bestätigt. 2FA ist bei dir nun aktiv.");
-        config.set("messages.needtoactivate", "&c[&42FA&c]&7 Es scheint so als wenn du 2FA bereits aktviert jedoch noch nicht bestätigt hast. &c&lSo schützt es deinen Account noch nicht! &7Bestätige 2FA indem du /2fa activate <6 Stelliger Code aus der App> ausführst.");
+        config.set("messages.needtoactivate", "&c[&42FA&c]&7 Es scheint so als wenn du 2FA bereits aktviert, jedoch noch nicht bestätigt hast. &c&lSo schützt es deinen Account noch nicht! &7Bestätige 2FA indem du /2fa activate <6 Stelliger Code aus der App> ausführst.");
         config.set("messages.loginsuccessful", "&c[&42FA&c]&7 Bestätigung erfolgreich! Du kannst nun normal Spielen.");
         config.set("messages.waitingforauthcode", "&c[&42FA&c]&7 Bitte gebe zuerst deinen 6 Stelligen Code im Chat ein, bevor du diese Aktion ausführst.");
         config.set("messages.hovertext", "&cLink öffnen");

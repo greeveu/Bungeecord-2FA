@@ -22,7 +22,7 @@ public class TwoFACommand extends Command {
     String logoutMessage = Main.getInstance().config.getString("messages.logoutmessage");
     String servername = Main.getInstance().config.getString("servername");
     String missingCode = Main.getInstance().config.getString("messages.missingcode");
-    String errorOcurred = Main.getInstance().config.getString("messages.errorocurred");
+    String errorOccurred = Main.getInstance().config.getString("messages.errorocurred");
     String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
     String successfulActivated = Main.getInstance().config.getString("messages.successfulcctivated");
     String hovertext = Main.getInstance().config.getString("messages.hovertext");
@@ -77,7 +77,7 @@ public class TwoFACommand extends Command {
                                 }
                             } catch (GeneralSecurityException e) {
                                 e.printStackTrace();
-                                player.sendMessage(errorOcurred.replace("&", "§"));
+                                player.sendMessage(errorOccurred.replace("&", "§"));
                             }
                         }
                     } else {
@@ -89,7 +89,7 @@ public class TwoFACommand extends Command {
 
     private void logout(ProxiedPlayer player) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-                    if (MySQLMethodes.hasRecord(player.getUniqueId().toString())) {
+                    if (MySQLMethodes.hasRecord(player.getUniqueId().toString()) && !MySQLMethodes.getLastIP(player.getUniqueId().toString()).equals("just_activated")) {
                         player.sendMessage(logoutMessage.replace("&", "§"));
                         MySQLMethodes.setIP(player.getUniqueId().toString(), "logout");
                     } else {

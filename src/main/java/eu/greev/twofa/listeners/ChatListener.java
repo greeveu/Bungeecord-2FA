@@ -21,28 +21,26 @@ public class ChatListener implements Listener {
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
         String message = event.getMessage();
         if (Main.getInstance().waitingForAuth.contains(player)) {
-            if (message.length() == 6) {
-                try {
-                    String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
-                    if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(message) ||
-                            Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(message) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                            Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                        Main.getInstance().waitingForAuth.remove(player);
-                        MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
-                        player.sendMessage(loginSuccessful.replace("&", "§"));
-                        event.setCancelled(true);
-                        return;
-                    } else {
-                        player.sendMessage(codeIsInvalid.replace("&", "§"));
-                    }
-                } catch (GeneralSecurityException e) {
-                    e.printStackTrace();
-                    player.sendMessage(errorOcurred.replace("&", "§"));
-                }
-            } else {
-                player.sendMessage(waitingForAuthCode.replace("&", "§"));
-            }
             event.setCancelled(true);
+            if (message.length() != 6) {
+                player.sendMessage(waitingForAuthCode.replace("&", "§"));
+                return;
+            }
+            try {
+                String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+                if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(message) ||
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(message) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                    Main.getInstance().waitingForAuth.remove(player);
+                    MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
+                    player.sendMessage(loginSuccessful.replace("&", "§"));
+                } else {
+                    player.sendMessage(codeIsInvalid.replace("&", "§"));
+                }
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                player.sendMessage(errorOcurred.replace("&", "§"));
+            }
         }
     }
 }
