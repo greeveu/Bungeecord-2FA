@@ -123,12 +123,17 @@ public class TwoFactorAuthUtil {
      * <p>
      * NOTE: this must be URL escaped if it is to be put into a href on a web-page.
      */
-    public String qrImageUrl(String keyId, String secret) {
-        StringBuilder sb = new StringBuilder(128);
+    public String qrImageUrl(String keyId, String issuer, String secret) {
+        StringBuilder sb = new StringBuilder(256);
         try {
             sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
-            sb.append("otpauth://totp/").append(URLEncoder.encode(keyId, "UTF-8"));
-            sb.append("?secret=").append(URLEncoder.encode(secret, "UTF-8")).append("&algorithm=SHA1&digits=6&period=30");
+            sb.append("otpauth://totp/")
+                    .append(URLEncoder.encode(issuer + ":" + keyId, "UTF-8"));
+            sb.append("?secret=")
+                    .append(URLEncoder.encode(secret, "UTF-8"))
+                    .append("&issuer=")
+                    .append(URLEncoder.encode(issuer, "UTF-8"))
+                    .append("&algorithm=SHA1&digits=6&period=30");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }

@@ -119,8 +119,8 @@ public class TwoFACommand extends Command {
                     }
                     String secret = Main.getInstance().twoFactorAuthUtil.generateBase32Secret();
                     MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
-                    TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(servername + player.getName(), secret)));
-                    message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().twoFactorAuthUtil.qrImageUrl(servername + player.getName(), secret)));
+                    TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
+                    message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
                     message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext.replace("&", "§")).create()));
                     player.sendMessage(message);
                 }
