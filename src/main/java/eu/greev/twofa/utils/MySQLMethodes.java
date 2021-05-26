@@ -5,6 +5,7 @@ import eu.greev.twofa.Main;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class MySQLMethodes {
 
@@ -31,38 +32,34 @@ public class MySQLMethodes {
         return false;
     }
 
-    public static String getSecret(String uuid) {
+    public static Optional<String> getSecret(String uuid) {
         try {
             String sql = "SELECT `secret` FROM 2fa_players WHERE uuid = ?";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
             ResultSet rs = mySQL.preparedStatement(sql, list);
             if (rs.next()) {
-                return rs.getString("secret");
-            } else {
-                return "none";
+                return Optional.of(rs.getString("secret"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "none";
+        return Optional.empty();
     }
 
-    public static String getLastIP(String uuid) {
+    public static Optional<String> getLastIP(String uuid) {
         try {
             String sql = "SELECT `last_ip` FROM 2fa_players WHERE uuid = ?";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
             ResultSet rs = mySQL.preparedStatement(sql, list);
             if (rs.next()) {
-                return rs.getString("last_ip");
-            } else {
-                return "none";
+                return Optional.of(rs.getString("last_ip"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return "none";
+        return Optional.empty();
     }
 
     public static void addNewPlayer(String uuid, String secret, String ip) {

@@ -11,7 +11,7 @@ public class QuitListener implements Listener {
     @EventHandler
     public void onQuti(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        Main.getInstance().waitingForAuth.remove(player);
+        Main.removeSpieler(player);
     }
 
 }
