@@ -4,6 +4,7 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -127,8 +128,7 @@ public class TwoFactorAuthUtil {
         StringBuilder sb = new StringBuilder(256);
         try {
             sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
-            sb.append("otpauth://totp/")
-                    .append(URLEncoder.encode(issuer + ":" + keyId, "UTF-8"));
+            sb.append("otpauth://totp/").append(URLEncoder.encode(issuer, "UTF-8")).append(":").append(URLEncoder.encode(keyId, "UTF-8"));
             sb.append("?secret=")
                     .append(URLEncoder.encode(secret, "UTF-8"))
                     .append("&issuer=")

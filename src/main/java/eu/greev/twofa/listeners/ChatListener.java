@@ -50,6 +50,7 @@ public class ChatListener implements Listener {
                 }
 
                 spieler.setWaitingForAuth(false);
+                spieler.setAuthenticated(true);
                 player.sendMessage(loginSuccessful.replace("&", "§"));
 
                 MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());

@@ -5,6 +5,7 @@ import eu.greev.twofa.Main;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Optional;
 
 public class MySQLMethodes {
@@ -22,9 +23,7 @@ public class MySQLMethodes {
     public static boolean hasRecord(String uuid) {
         try {
             String sql = "SELECT 1 FROM 2fa_players WHERE uuid = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = mySQL.preparedStatement(sql, Collections.singletonList(uuid));
             return rs.next();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -35,9 +34,7 @@ public class MySQLMethodes {
     public static Optional<String> getSecret(String uuid) {
         try {
             String sql = "SELECT `secret` FROM 2fa_players WHERE uuid = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = mySQL.preparedStatement(sql, Collections.singletonList(uuid));
             if (rs.next()) {
                 return Optional.of(rs.getString("secret"));
             }
@@ -50,9 +47,7 @@ public class MySQLMethodes {
     public static Optional<String> getLastIP(String uuid) {
         try {
             String sql = "SELECT `last_ip` FROM 2fa_players WHERE uuid = ?";
-            ArrayList<Object> list = new ArrayList<>();
-            list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = mySQL.preparedStatement(sql, Collections.singletonList(uuid));
             if (rs.next()) {
                 return Optional.of(rs.getString("last_ip"));
             }

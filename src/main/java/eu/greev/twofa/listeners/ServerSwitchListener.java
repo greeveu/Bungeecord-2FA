@@ -22,6 +22,16 @@ public class ServerSwitchListener implements Listener {
         Spieler spieler = Main.getSpieler(player);
         String uuid = player.getUniqueId().toString();
 
+        if (spieler == null) {
+            spieler = new Spieler(player);
+            Main.addSpieler(player, spieler);
+        }
+
+        if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
+            asyncDatabaseAndPlayerUpdate(player, spieler, uuid);
+            return;
+        }
+
         if (spieler.isAuthenticated()) {
             return;
         }
@@ -29,19 +39,22 @@ public class ServerSwitchListener implements Listener {
         if (spieler.isWaitingForAuth()) {
             player.sendMessage(waitingForAuthCode.replace("&", "§"));
             event.setCancelled(true);
-            return;
         }
+    }
 
+    private void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, Spieler spieler, String uuid) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            Optional<String> lastip = MySQLMethodes.getLastIP(uuid);
-            Optional<String> secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+            boolean has2faEnables = MySQLMethodes.hasRecord(uuid);
 
             //Remove the player if he hasnt 2fa enabled
-            if (!lastip.isPresent()) {
+            if (!has2faEnables) {
                 spieler.setAuthenticated(true);
                 spieler.setWaitingForAuth(false);
                 return;
             }
+
+            Optional<String> lastip = MySQLMethodes.getLastIP(uuid);
+            Optional<String> secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
 
             secret.ifPresent(spieler::setSecret);
 

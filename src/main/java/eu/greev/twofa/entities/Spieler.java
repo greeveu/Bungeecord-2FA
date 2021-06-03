@@ -2,6 +2,8 @@ package eu.greev.twofa.entities;
 
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.util.UUID;
+
 public class Spieler {
 
     private ProxiedPlayer player;
@@ -35,6 +37,7 @@ public class Spieler {
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
+        System.out.println(player.getDisplayName() + ": " + this.authenticated);
     }
 
     public String getSecret() {

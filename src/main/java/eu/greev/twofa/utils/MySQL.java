@@ -1,7 +1,7 @@
 package eu.greev.twofa.utils;
 
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.List;
 
 public class MySQL {
     // Proporties
@@ -50,6 +50,7 @@ public class MySQL {
         String url = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
         try {
             this.connection = DriverManager.getConnection(url, this.username, this.password);
+            System.out.println("Connected to Database");
         } catch (SQLException ex) {
             ex.printStackTrace();
             this.connection = null;
@@ -65,7 +66,7 @@ public class MySQL {
         this.connection = null;
     }
 
-    public ResultSet preparedStatement(String query, ArrayList<Object> values) throws SQLException {
+    public ResultSet preparedStatement(String query, List<Object> values) throws SQLException {
         if (!this.isConnected())
             this.connect();
 
@@ -78,7 +79,7 @@ public class MySQL {
         return ps.getResultSet();
     }
 
-    public void preparedStatementUpdate(String query, ArrayList<Object> values) throws SQLException {
+    public void preparedStatementUpdate(String query, List<Object> values) throws SQLException {
         if (!this.isConnected())
             this.connect();
 

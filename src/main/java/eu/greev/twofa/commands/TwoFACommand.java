@@ -105,7 +105,7 @@ public class TwoFACommand extends Command {
 
     private void logout(ProxiedPlayer player) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (MySQLMethodes.hasRecord(player.getUniqueId().toString()) && !MySQLMethodes.getLastIP(player.getUniqueId().toString()).equals("just_activated")) {
+            if (MySQLMethodes.hasRecord(player.getUniqueId().toString())) {
                 player.sendMessage(logoutMessage.replace("&", "§"));
                 MySQLMethodes.setIP(player.getUniqueId().toString(), "logout");
             } else {
@@ -132,13 +132,23 @@ public class TwoFACommand extends Command {
                 player.sendMessage(alreadyActive.replace("&", "§"));
                 return;
             }
-
             String secret = Main.getInstance().twoFactorAuthUtil.generateBase32Secret();
+
             spieler.setSecret(secret);
+            String url = Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret);
+
             MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
-            TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
-            message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
+            TextComponent message = new TextComponent(activated
+                    .replace("&", "§")
+                    .replace("%secret%", secret)
+                    .replace("%link%", url)
+            );
+
+            System.out.println(url);
+
+            message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
             message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext.replace("&", "§")).create()));
+
             player.sendMessage(message);
         });
     }

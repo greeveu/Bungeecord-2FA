@@ -20,11 +20,11 @@ import java.util.Map;
 public final class Main extends Plugin {
 
     private static Main main;
-    private final ConfigHelper configHelper = new ConfigHelper();
     public static final Map<ProxiedPlayer, Spieler> PP_TO_S = new HashMap<>();
     public final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
-    public MySQL mySQL;
+    private final ConfigHelper configHelper = new ConfigHelper();
     public YamlFile config;
+    public MySQL mySQL;
 
     public static Main getInstance() {
         return main;
