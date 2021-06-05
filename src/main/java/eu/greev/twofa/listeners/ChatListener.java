@@ -22,6 +22,11 @@ public class ChatListener implements Listener {
     @EventHandler
     public void onChat(ChatEvent event) {
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
         Spieler spieler = Main.getSpieler(player);
         String message = event.getMessage();
 

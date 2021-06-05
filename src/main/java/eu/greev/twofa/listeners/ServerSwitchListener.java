@@ -19,6 +19,11 @@ public class ServerSwitchListener implements Listener {
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
         Spieler spieler = Main.getSpieler(player);
         String uuid = player.getUniqueId().toString();
 
