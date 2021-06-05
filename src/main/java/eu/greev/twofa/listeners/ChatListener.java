@@ -37,7 +37,6 @@ public class ChatListener implements Listener {
         event.setCancelled(true);
 
         if (spieler.isWaitingForAuth() && message.length() == 6) {
-            player.sendMessage(waitingForAuthCode.replace("&", "§"));
 
             try {
                 String secret = spieler.getSecret();
@@ -63,6 +62,8 @@ public class ChatListener implements Listener {
                 e.printStackTrace();
                 player.sendMessage(errorOcurred.replace("&", "§"));
             }
+        } else {
+            player.sendMessage(waitingForAuthCode.replace("&", "§"));
         }
     }
 }
