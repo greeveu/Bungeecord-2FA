@@ -1,50 +1,28 @@
 package eu.greev.twofa.entities;
 
+import eu.greev.twofa.utils.AuthState;
+import lombok.Getter;
+import lombok.Setter;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class Spieler {
+    private final static Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
 
-    private ProxiedPlayer player;
-    boolean waitingForAuth = true;
-    boolean authenticated = false;
-    private String secret;
+    @Getter private final ProxiedPlayer player;
+    @Getter @Setter AuthState authState;
+    @Getter @Setter private String secret;
 
     public Spieler(ProxiedPlayer player) {
         this.player = player;
+
+        SPIELER_MAP.put(player.getUniqueId(), this);
     }
 
-    public ProxiedPlayer getPlayer() {
-        return player;
-    }
-
-    public void setPlayer(ProxiedPlayer player) {
-        this.player = player;
-    }
-
-    public boolean isWaitingForAuth() {
-        return waitingForAuth;
-    }
-
-    public void setWaitingForAuth(boolean waitingForAuth) {
-        this.waitingForAuth = waitingForAuth;
-    }
-
-    public boolean isAuthenticated() {
-        return authenticated;
-    }
-
-    public void setAuthenticated(boolean authenticated) {
-        this.authenticated = authenticated;
-        System.out.println(player.getDisplayName() + ": " + this.authenticated);
-    }
-
-    public String getSecret() {
-        return secret;
-    }
-
-    public void setSecret(String secret) {
-        this.secret = secret;
+    public static Spieler get(UUID uuid) {
+        return SPIELER_MAP.get(uuid);
     }
 }

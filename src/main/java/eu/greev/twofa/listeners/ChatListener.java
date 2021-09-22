@@ -2,6 +2,7 @@ package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -30,13 +31,13 @@ public class ChatListener implements Listener {
         Spieler spieler = Main.getSpieler(player);
         String message = event.getMessage();
 
-        if (spieler.isAuthenticated()) {
+        if (spieler.getAuthState() != AuthState.WAITING_FOR_AUTH) {
             return;
         }
 
         event.setCancelled(true);
 
-        if (spieler.isWaitingForAuth() && message.length() == 6) {
+        if (message.length() == 6) {
 
             try {
                 String secret = spieler.getSecret();
@@ -53,8 +54,7 @@ public class ChatListener implements Listener {
                     return;
                 }
 
-                spieler.setWaitingForAuth(false);
-                spieler.setAuthenticated(true);
+                spieler.setAuthState(AuthState.AUTHENTICATED);
                 player.sendMessage(loginSuccessful.replace("&", "§"));
 
                 MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());

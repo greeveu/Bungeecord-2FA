@@ -2,6 +2,7 @@ package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -37,14 +38,12 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        if (spieler.isAuthenticated()) {
+        if (spieler.getAuthState() != AuthState.WAITING_FOR_AUTH) {
             return;
         }
 
-        if (spieler.isWaitingForAuth()) {
-            player.sendMessage(waitingForAuthCode.replace("&", "§"));
-            event.setCancelled(true);
-        }
+        player.sendMessage(waitingForAuthCode.replace("&", "§"));
+        event.setCancelled(true);
     }
 
     private void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, Spieler spieler, String uuid) {
@@ -53,8 +52,7 @@ public class ServerSwitchListener implements Listener {
 
             //Remove the player if he hasnt 2fa enabled
             if (!has2faEnables) {
-                spieler.setAuthenticated(true);
-                spieler.setWaitingForAuth(false);
+                spieler.setAuthState(AuthState.NOT_ENABLED);
                 return;
             }
 
@@ -65,14 +63,12 @@ public class ServerSwitchListener implements Listener {
 
             if (lastip.get().equals("just_activated")) {
                 player.sendMessage(needToActivate.replace("&", "§"));
-                spieler.setAuthenticated(true);
-                spieler.setWaitingForAuth(false);
+                spieler.setAuthState(AuthState.NOT_ENABLED);
                 return;
             }
 
             if (lastip.get().equals(player.getPendingConnection().getAddress().getAddress().toString())) {
-                spieler.setAuthenticated(true);
-                spieler.setWaitingForAuth(false);
+                spieler.setAuthState(AuthState.AUTHENTICATED);
                 return;
             }
 
