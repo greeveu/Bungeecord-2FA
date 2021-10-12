@@ -1,6 +1,8 @@
 package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.Main;
+import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -8,6 +10,8 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
+import java.util.List;
 
 public class ChatListener implements Listener {
 
@@ -19,28 +23,47 @@ public class ChatListener implements Listener {
     @EventHandler
     public void onChat(ChatEvent event) {
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
+        Spieler spieler = Main.getSpieler(player);
         String message = event.getMessage();
-        if (Main.getInstance().waitingForAuth.contains(player)) {
-            event.setCancelled(true);
-            if (message.length() != 6) {
-                player.sendMessage(waitingForAuthCode.replace("&", "§"));
-                return;
-            }
+
+        if (spieler.getAuthState() != AuthState.WAITING_FOR_AUTH) {
+            return;
+        }
+
+        event.setCancelled(true);
+
+        if (message.length() == 6) {
+
             try {
-                String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
-                if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(message) ||
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(message) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                    Main.getInstance().waitingForAuth.remove(player);
-                    MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
-                    player.sendMessage(loginSuccessful.replace("&", "§"));
-                } else {
+                String secret = spieler.getSecret();
+
+                List<String> validCodes = Arrays.asList(
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret),
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000),
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000)
+                );
+
+                //The Code was Invalid
+                if (!validCodes.contains(message)) {
                     player.sendMessage(codeIsInvalid.replace("&", "§"));
+                    return;
                 }
+
+                spieler.setAuthState(AuthState.AUTHENTICATED);
+                player.sendMessage(loginSuccessful.replace("&", "§"));
+
+                MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
                 player.sendMessage(errorOcurred.replace("&", "§"));
             }
+        } else {
+            player.sendMessage(waitingForAuthCode.replace("&", "§"));
         }
     }
 }

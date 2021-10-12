@@ -11,7 +11,12 @@ public class QuitListener implements Listener {
     @EventHandler
     public void onQuti(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        Main.getInstance().waitingForAuth.remove(player);
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
+        Main.removeSpieler(player);
     }
 
 }

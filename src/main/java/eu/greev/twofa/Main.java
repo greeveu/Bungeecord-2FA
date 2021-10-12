@@ -1,6 +1,7 @@
 package eu.greev.twofa;
 
 import eu.greev.twofa.commands.TwoFACommand;
+import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
@@ -13,17 +14,17 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.simpleyaml.configuration.file.YamlFile;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public final class Main extends Plugin {
 
     private static Main main;
+    public static final Map<ProxiedPlayer, Spieler> PP_TO_S = new HashMap<>();
+    public final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     private final ConfigHelper configHelper = new ConfigHelper();
-    public MySQL mySQL;
-    public List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
     public YamlFile config;
-    public TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
+    public MySQL mySQL;
 
     public static Main getInstance() {
         return main;
@@ -51,6 +52,17 @@ public final class Main extends Plugin {
     }
 
     @Override
-    public void onDisable() {
+    public void onDisable() { }
+
+    public static Spieler getSpieler(ProxiedPlayer player) {
+        return PP_TO_S.get(player);
+    }
+
+    public static void removeSpieler(ProxiedPlayer player) {
+        PP_TO_S.remove(player);
+    }
+
+    public static void addSpieler(ProxiedPlayer player, Spieler spieler) {
+        PP_TO_S.put(player, spieler);
     }
 }
