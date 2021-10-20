@@ -12,9 +12,16 @@ import java.util.UUID;
 public class Spieler {
     private static final Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
 
-    @Getter private final ProxiedPlayer player;
-    @Getter @Setter AuthState authState;
-    @Getter @Setter private String secret;
+    @Getter
+    private final ProxiedPlayer player;
+
+    @Getter
+    @Setter
+    private AuthState authState;
+
+    @Getter
+    @Setter
+    private String secret;
 
     public Spieler(ProxiedPlayer player) {
         this.player = player;

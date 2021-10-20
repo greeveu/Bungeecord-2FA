@@ -37,7 +37,15 @@ public final class Main extends Plugin {
     public void onEnable() {
         main = this;
         config = configHelper.getConfig("plugins/2FA_Config.yml");
-        mySQL = new MySQL(config.getString("mysql.host"), config.getString("mysql.port"), config.getString("mysql.username"), config.getString("mysql.password"), config.getString("mysql.database"));
+
+        mySQL = new MySQL(
+                config.getString("mysql.host"),
+                config.getString("mysql.port"),
+                config.getString("mysql.username"),
+                config.getString("mysql.password"),
+                config.getString("mysql.database")
+        );
+
         mySQL.connect();
         MySQLMethodes.createTable();
         registerCommands();

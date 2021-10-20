@@ -5,6 +5,7 @@ import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -42,7 +43,7 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        player.sendMessage(waitingForAuthCode.replace("&", "§"));
+        player.sendMessage(new TextComponent(waitingForAuthCode.replace("&", "§")));
         event.setCancelled(true);
     }
 
@@ -66,7 +67,7 @@ public class ServerSwitchListener implements Listener {
             }
 
             if (lastip.get().equals("just_activated")) {
-                player.sendMessage(needToActivate.replace("&", "§"));
+                player.sendMessage(new TextComponent(needToActivate.replace("&", "§")));
                 spieler.setAuthState(AuthState.NOT_ENABLED);
                 return;
             }

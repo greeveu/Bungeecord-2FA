@@ -4,6 +4,7 @@ import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -51,20 +52,20 @@ public class ChatListener implements Listener {
 
                 //The Code was Invalid
                 if (!validCodes.contains(message)) {
-                    player.sendMessage(codeIsInvalid.replace("&", "§"));
+                    player.sendMessage(new TextComponent(codeIsInvalid.replace("&", "§")));
                     return;
                 }
 
                 spieler.setAuthState(AuthState.AUTHENTICATED);
-                player.sendMessage(loginSuccessful.replace("&", "§"));
+                player.sendMessage(new TextComponent(loginSuccessful.replace("&", "§")));
 
                 MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
-                player.sendMessage(errorOcurred.replace("&", "§"));
+                player.sendMessage(new TextComponent(errorOcurred.replace("&", "§")));
             }
         } else {
-            player.sendMessage(waitingForAuthCode.replace("&", "§"));
+            player.sendMessage(new TextComponent(waitingForAuthCode.replace("&", "§")));
         }
     }
 }
