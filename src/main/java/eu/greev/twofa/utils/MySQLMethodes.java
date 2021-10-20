@@ -10,7 +10,11 @@ import java.util.Optional;
 
 public class MySQLMethodes {
 
-    static MySQL mySQL = Main.getInstance().mySQL;
+    private MySQLMethodes() {
+        throw new IllegalStateException("Utility class");
+    }
+
+    private static final MySQL mySQL = Main.getInstance().getMySQL();
 
     public static void createTable() {
         try {

@@ -13,9 +13,9 @@ import net.md_5.bungee.event.EventHandler;
 import java.util.Optional;
 
 public class ServerSwitchListener implements Listener {
-    String waitingForAuthCode = Main.getInstance().config.getString("messages.waitingforauthcode");
-    String authEnabled = Main.getInstance().config.getString("messages.authenabled");
-    String needToActivate = Main.getInstance().config.getString("messages.needtoactivate");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
+    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -60,6 +60,10 @@ public class ServerSwitchListener implements Listener {
             Optional<String> secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
 
             secret.ifPresent(spieler::setSecret);
+
+            if (!lastip.isPresent()) {
+                return;
+            }
 
             if (lastip.get().equals("just_activated")) {
                 player.sendMessage(needToActivate.replace("&", "§"));

@@ -10,15 +10,16 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
 public class ChatListener implements Listener {
 
-    String waitingForAuthCode = Main.getInstance().config.getString("messages.waitingforauthcode");
-    String errorOcurred = Main.getInstance().config.getString("messages.errorocurred");
-    String loginSuccessful = Main.getInstance().config.getString("messages.loginsuccessful");
-    String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    private final String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred");
+    private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful");
+    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -44,8 +45,8 @@ public class ChatListener implements Listener {
 
                 List<String> validCodes = Arrays.asList(
                         Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000)
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, Instant.now().toEpochMilli() - 30000),
+                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, Instant.now().toEpochMilli() + 30000)
                 );
 
                 //The Code was Invalid

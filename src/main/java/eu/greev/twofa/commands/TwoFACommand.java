@@ -18,18 +18,18 @@ import java.util.List;
 import java.util.Optional;
 
 public class TwoFACommand extends Command {
-    String helpMessage = Main.getInstance().config.getString("messages.help");
-    String alreadyActive = Main.getInstance().config.getString("messages.alreadyactive");
-    String activated = Main.getInstance().config.getString("messages.activated");
-    String removeAuth = Main.getInstance().config.getString("messages.removeauth");
-    String notLoggedIn = Main.getInstance().config.getString("messages.notloggedin");
-    String logoutMessage = Main.getInstance().config.getString("messages.logoutmessage");
-    String servername = Main.getInstance().config.getString("servername");
-    String missingCode = Main.getInstance().config.getString("messages.missingcode");
-    String errorOccurred = Main.getInstance().config.getString("messages.errorocurred");
-    String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
-    String successfulActivated = Main.getInstance().config.getString("messages.successfulcctivated");
-    String hovertext = Main.getInstance().config.getString("messages.hovertext");
+    private final String helpMessage = Main.getInstance().getConfig().getString("messages.help");
+    private final String alreadyActive = Main.getInstance().getConfig().getString("messages.alreadyactive");
+    private final String activated = Main.getInstance().getConfig().getString("messages.activated");
+    private final String removeAuth = Main.getInstance().getConfig().getString("messages.removeauth");
+    private final String notLoggedIn = Main.getInstance().getConfig().getString("messages.notloggedin");
+    private final String logoutMessage = Main.getInstance().getConfig().getString("messages.logoutmessage");
+    private final String servername = Main.getInstance().getConfig().getString("servername");
+    private final String missingCode = Main.getInstance().getConfig().getString("messages.missingcode");
+    private final String errorOccurred = Main.getInstance().getConfig().getString("messages.errorocurred");
+    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
+    private final String successfulActivated = Main.getInstance().getConfig().getString("messages.successfulcctivated");
+    private final String hovertext = Main.getInstance().getConfig().getString("messages.hovertext");
 
     public TwoFACommand() {
         super("2fa");
@@ -59,6 +59,8 @@ public class TwoFACommand extends Command {
                                 player.sendMessage(missingCode.replace("&", "§"));
                             }
                             break;
+                        default:
+                            player.sendMessage(helpMessage.replace("&", "§"));
                     }
                 } else {
                     player.sendMessage(helpMessage.replace("&", "§"));
@@ -146,8 +148,6 @@ public class TwoFACommand extends Command {
                     .replace("%secret%", secret)
                     .replace("%link%", url)
             );
-
-            System.out.println(url);
 
             message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
             message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext.replace("&", "§")).create()));

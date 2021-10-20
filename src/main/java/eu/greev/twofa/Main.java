@@ -9,6 +9,7 @@ import eu.greev.twofa.utils.ConfigHelper;
 import eu.greev.twofa.utils.MySQL;
 import eu.greev.twofa.utils.MySQLMethodes;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
+import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -23,8 +24,10 @@ public final class Main extends Plugin {
     public static final Map<ProxiedPlayer, Spieler> PP_TO_S = new HashMap<>();
     public final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     private final ConfigHelper configHelper = new ConfigHelper();
-    public YamlFile config;
-    public MySQL mySQL;
+    @Getter
+    private YamlFile config;
+    @Getter
+    private MySQL mySQL;
 
     public static Main getInstance() {
         return main;

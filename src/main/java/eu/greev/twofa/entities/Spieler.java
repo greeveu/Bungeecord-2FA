@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Spieler {
-    private final static Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
+    private static final Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
 
     @Getter private final ProxiedPlayer player;
     @Getter @Setter AuthState authState;
