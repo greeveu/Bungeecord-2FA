@@ -5,6 +5,7 @@ import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.ProxyServer;
+import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -13,9 +14,9 @@ import net.md_5.bungee.event.EventHandler;
 import java.util.Optional;
 
 public class ServerSwitchListener implements Listener {
-    String waitingForAuthCode = Main.getInstance().config.getString("messages.waitingforauthcode");
-    String authEnabled = Main.getInstance().config.getString("messages.authenabled");
-    String needToActivate = Main.getInstance().config.getString("messages.needtoactivate");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
+    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -42,7 +43,7 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        player.sendMessage(waitingForAuthCode.replace("&", "§"));
+        player.sendMessage(new TextComponent(waitingForAuthCode.replace("&", "§")));
         event.setCancelled(true);
     }
 
@@ -61,8 +62,12 @@ public class ServerSwitchListener implements Listener {
 
             secret.ifPresent(spieler::setSecret);
 
+            if (!lastip.isPresent()) {
+                return;
+            }
+
             if (lastip.get().equals("just_activated")) {
-                player.sendMessage(needToActivate.replace("&", "§"));
+                player.sendMessage(new TextComponent(needToActivate.replace("&", "§")));
                 spieler.setAuthState(AuthState.NOT_ENABLED);
                 return;
             }

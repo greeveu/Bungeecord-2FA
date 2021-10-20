@@ -9,6 +9,7 @@ import eu.greev.twofa.utils.ConfigHelper;
 import eu.greev.twofa.utils.MySQL;
 import eu.greev.twofa.utils.MySQLMethodes;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
+import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
@@ -23,8 +24,10 @@ public final class Main extends Plugin {
     public static final Map<ProxiedPlayer, Spieler> PP_TO_S = new HashMap<>();
     public final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     private final ConfigHelper configHelper = new ConfigHelper();
-    public YamlFile config;
-    public MySQL mySQL;
+    @Getter
+    private YamlFile config;
+    @Getter
+    private MySQL mySQL;
 
     public static Main getInstance() {
         return main;
@@ -34,7 +37,15 @@ public final class Main extends Plugin {
     public void onEnable() {
         main = this;
         config = configHelper.getConfig("plugins/2FA_Config.yml");
-        mySQL = new MySQL(config.getString("mysql.host"), config.getString("mysql.port"), config.getString("mysql.username"), config.getString("mysql.password"), config.getString("mysql.database"));
+
+        mySQL = new MySQL(
+                config.getString("mysql.host"),
+                config.getString("mysql.port"),
+                config.getString("mysql.username"),
+                config.getString("mysql.password"),
+                config.getString("mysql.database")
+        );
+
         mySQL.connect();
         MySQLMethodes.createTable();
         registerCommands();
@@ -52,7 +63,9 @@ public final class Main extends Plugin {
     }
 
     @Override
-    public void onDisable() { }
+    public void onDisable() {
+        getMySQL().disconnect();
+    }
 
     public static Spieler getSpieler(ProxiedPlayer player) {
         return PP_TO_S.get(player);
