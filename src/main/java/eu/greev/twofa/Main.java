@@ -63,7 +63,9 @@ public final class Main extends Plugin {
     }
 
     @Override
-    public void onDisable() { }
+    public void onDisable() {
+        getMySQL().disconnect();
+    }
 
     public static Spieler getSpieler(ProxiedPlayer player) {
         return PP_TO_S.get(player);

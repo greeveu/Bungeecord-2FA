@@ -37,35 +37,39 @@ public class TwoFACommand extends Command {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (sender instanceof ProxiedPlayer) {
-            ProxiedPlayer player = (ProxiedPlayer) sender;
+        if (!(sender instanceof ProxiedPlayer)) {
+            return;
+        }
 
-            if (player.hasPermission("2fa.use")) {
-                if (args.length != 0) {
-                    switch (args[0].toLowerCase()) {
-                        case "enable":
-                            enableTFA(player);
-                            break;
-                        case "disable":
-                            disableTFA(player);
-                            break;
-                        case "logout":
-                            logout(player);
-                            break;
-                        case "activate":
-                            if (args.length == 2) {
-                                activate(player, args[1]);
-                            } else {
-                                player.sendMessage(new TextComponent(missingCode.replace("&", "§")));
-                            }
-                            break;
-                        default:
-                            player.sendMessage(new TextComponent(helpMessage.replace("&", "§")));
+        ProxiedPlayer player = (ProxiedPlayer) sender;
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
+        if (args.length != 0) {
+            switch (args[0].toLowerCase()) {
+                case "enable":
+                    enableTFA(player);
+                    break;
+                case "disable":
+                    disableTFA(player);
+                    break;
+                case "logout":
+                    logout(player);
+                    break;
+                case "activate":
+                    if (args.length == 2) {
+                        activate(player, args[1]);
+                    } else {
+                        player.sendMessage(new TextComponent(missingCode.replace("&", "§")));
                     }
-                } else {
+                    break;
+                default:
                     player.sendMessage(new TextComponent(helpMessage.replace("&", "§")));
-                }
             }
+        } else {
+            player.sendMessage(new TextComponent(helpMessage.replace("&", "§")));
         }
     }
 
@@ -76,7 +80,7 @@ public class TwoFACommand extends Command {
             Optional<String> lastIP = MySQLMethodes.getLastIP(uuid);
 
             if (!lastIP.isPresent()) {
-                player.sendMessage(notLoggedIn.replace("&", "§"));
+                player.sendMessage(new TextComponent(notLoggedIn.replace("&", "§")));
                 return;
             }
 
