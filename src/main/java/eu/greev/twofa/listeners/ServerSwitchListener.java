@@ -1,7 +1,6 @@
 package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.Main;
-import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -26,12 +25,12 @@ public class ServerSwitchListener implements Listener {
 
         Main.getInstance().getWaitingForAuth().add(player); //Add player directly and remove him later in case the database needs more time so the player can't execute any commands while waiting for the db
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (!MySQLMethodes.hasRecord(uuid)) {
+            if (!Main.getInstance().getMySQLMethods().hasRecord(uuid)) {
                 Main.getInstance().getWaitingForAuth().remove(player); //Remove the player if he hasnt 2fa enabled
                 return;
             }
 
-            String lastIp = MySQLMethodes.getLastIP(uuid);
+            String lastIp = Main.getInstance().getMySQLMethods().getLastIP(uuid);
             if (lastIp.equals("just_activated")) {
                 player.sendMessage(new TextComponent(this.needToActivate.replace("&", "§")));
                 return;

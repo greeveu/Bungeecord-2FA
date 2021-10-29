@@ -1,7 +1,6 @@
 package eu.greev.twofa.commands;
 
 import eu.greev.twofa.Main;
-import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -72,21 +71,21 @@ public class TwoFACommand extends Command {
     private void activate(ProxiedPlayer player, String code) {
         String uuid = player.getUniqueId().toString();
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (!MySQLMethodes.hasRecord(uuid)) {
+            if (!Main.getInstance().getMySQLMethods().hasRecord(uuid)) {
                 player.sendMessage(new TextComponent(this.notLoggedIn.replace("&", "§")));
                 return;
             }
-            if (!MySQLMethodes.getLastIP(uuid).equalsIgnoreCase("just_activated")) {
+            if (!Main.getInstance().getMySQLMethods().getLastIP(uuid).equalsIgnoreCase("just_activated")) {
                 return;
             }
 
             try {
-                String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+                String secret = Main.getInstance().getMySQLMethods().getSecret(player.getUniqueId().toString());
                 if (Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret).equals(code)
                     || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code)  //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                     || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                 {
-                    MySQLMethodes.setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
+                    Main.getInstance().getMySQLMethods().setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
                     player.sendMessage(new TextComponent(this.successfulActivated.replace("&", "§")));
                 } else {
                     player.sendMessage(new TextComponent(this.codeIsInvalid.replace("&", "§")));
@@ -100,11 +99,11 @@ public class TwoFACommand extends Command {
 
     private void logout(ProxiedPlayer player) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (MySQLMethodes.hasRecord(player.getUniqueId().toString())
-                && !MySQLMethodes.getLastIP(player.getUniqueId().toString()).equals("just_activated")
+            if (Main.getInstance().getMySQLMethods().hasRecord(player.getUniqueId().toString())
+                && !Main.getInstance().getMySQLMethods().getLastIP(player.getUniqueId().toString()).equals("just_activated")
             ) {
                 player.sendMessage(new TextComponent(this.logoutMessage.replace("&", "§")));
-                MySQLMethodes.setIP(player.getUniqueId().toString(), "logout");
+                Main.getInstance().getMySQLMethods().setIP(player.getUniqueId().toString(), "logout");
             } else {
                 player.sendMessage(new TextComponent(this.notLoggedIn.replace("&", "§")));
             }
@@ -113,8 +112,8 @@ public class TwoFACommand extends Command {
 
     private void disableTFA(ProxiedPlayer player) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (MySQLMethodes.hasRecord(player.getUniqueId().toString())) {
-                MySQLMethodes.removePlayer(player.getUniqueId().toString());
+            if (Main.getInstance().getMySQLMethods().hasRecord(player.getUniqueId().toString())) {
+                Main.getInstance().getMySQLMethods().removePlayer(player.getUniqueId().toString());
                 player.sendMessage(new TextComponent(this.removeAuth.replace("&", "§")));
             } else {
                 player.sendMessage(new TextComponent(this.notLoggedIn.replace("&", "§")));
@@ -124,12 +123,12 @@ public class TwoFACommand extends Command {
 
     private void enableTFA(ProxiedPlayer player) {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (MySQLMethodes.hasRecord(player.getUniqueId().toString())) {
+            if (Main.getInstance().getMySQLMethods().hasRecord(player.getUniqueId().toString())) {
                 player.sendMessage(new TextComponent(this.alreadyActive.replace("&", "§")));
                 return;
             }
             String secret = Main.getInstance().getTwoFactorAuthUtil().generateBase32Secret();
-            MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
+            Main.getInstance().getMySQLMethods().addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
             TextComponent message = new TextComponent(this.activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), this.serverName, secret)));
             message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), this.serverName, secret)));
             message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(this.hoverText.replace("&", "§")).create()));

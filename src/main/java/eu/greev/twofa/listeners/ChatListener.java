@@ -1,7 +1,6 @@
 package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.Main;
-import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -31,13 +30,13 @@ public class ChatListener implements Listener {
         }
 
         try {
-            String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+            String secret = Main.getInstance().getMySQLMethods().getSecret(player.getUniqueId().toString());
             if (Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret).equals(message)
                 || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(message) //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                 || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message) //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
             ) {
                 Main.getInstance().getWaitingForAuth().remove(player);
-                MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
+                Main.getInstance().getMySQLMethods().setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
                 player.sendMessage(new TextComponent(this.loginSuccessful.replace("&", "§")));
             } else {
                 player.sendMessage(new TextComponent(this.codeIsInvalid.replace("&", "§")));
