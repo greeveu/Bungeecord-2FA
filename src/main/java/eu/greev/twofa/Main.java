@@ -29,12 +29,18 @@ public final class Main extends Plugin {
     @Override
     public void onEnable() {
         instance = this;
-        config = configHelper.getConfig("plugins/2FA_Config.yml");
-        mySQL = new MySQL(config.getString("mysql.host"), config.getString("mysql.port"), config.getString("mysql.username"), config.getString("mysql.password"), config.getString("mysql.database"));
-        mySQL.connect();
+        this.config = this.configHelper.getConfig("plugins/2FA_Config.yml");
+        this.mySQL = new MySQL(
+            this.config.getString("mysql.host"),
+            this.config.getString("mysql.port"),
+            this.config.getString("mysql.username"),
+            this.config.getString("mysql.password"),
+            this.config.getString("mysql.database")
+        );
+        this.mySQL.connect();
         MySQLMethodes.createTable();
-        registerCommands();
-        registerEvents();
+        this.registerCommands();
+        this.registerEvents();
     }
 
     private void registerEvents() {
@@ -44,7 +50,7 @@ public final class Main extends Plugin {
     }
 
     private void registerCommands() {
-        getProxy().getPluginManager().registerCommand(this, new TwoFACommand());
+        ProxyServer.getInstance().getPluginManager().registerCommand(this, new TwoFACommand());
     }
 
     @Override

@@ -9,9 +9,9 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 public class ServerSwitchListener implements Listener {
-    String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
-    String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
-    String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
+    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -23,20 +23,20 @@ public class ServerSwitchListener implements Listener {
                         if (MySQLMethodes.hasRecord(uuid)) {
                             String lastip = MySQLMethodes.getLastIP(uuid);
                             if (lastip.equals("just_activated")) {
-                                player.sendMessage(needToActivate.replace("&", "§"));
+                                player.sendMessage(this.needToActivate.replace("&", "§"));
                                 return;
                             }
                             if (lastip.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
                                 return;
                             }
-                            player.sendMessage(authEnabled.replace("&", "§"));
+                            player.sendMessage(this.authEnabled.replace("&", "§"));
                         } else {
                             Main.getInstance().getWaitingForAuth().remove(player); //Remove the player if he hasnt 2fa enabled
                         }
                     }
             );
         } else {
-            player.sendMessage(waitingForAuthCode.replace("&", "§"));
+            player.sendMessage(this.waitingForAuthCode.replace("&", "§"));
             event.setCancelled(true);
         }
     }

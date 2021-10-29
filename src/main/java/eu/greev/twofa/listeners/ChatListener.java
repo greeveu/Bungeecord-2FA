@@ -10,11 +10,10 @@ import net.md_5.bungee.event.EventHandler;
 import java.security.GeneralSecurityException;
 
 public class ChatListener implements Listener {
-
-    String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
-    String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred");
-    String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful");
-    String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    private final String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred");
+    private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful");
+    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -23,7 +22,7 @@ public class ChatListener implements Listener {
         if (Main.getInstance().getWaitingForAuth().contains(player)) {
             event.setCancelled(true);
             if (message.length() != 6) {
-                player.sendMessage(waitingForAuthCode.replace("&", "§"));
+                player.sendMessage(this.waitingForAuthCode.replace("&", "§"));
                 return;
             }
             try {
@@ -33,13 +32,13 @@ public class ChatListener implements Listener {
                         Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(message)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                     Main.getInstance().getWaitingForAuth().remove(player);
                     MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
-                    player.sendMessage(loginSuccessful.replace("&", "§"));
+                    player.sendMessage(this.loginSuccessful.replace("&", "§"));
                 } else {
-                    player.sendMessage(codeIsInvalid.replace("&", "§"));
+                    player.sendMessage(this.codeIsInvalid.replace("&", "§"));
                 }
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
-                player.sendMessage(errorOcurred.replace("&", "§"));
+                player.sendMessage(this.errorOcurred.replace("&", "§"));
             }
         }
     }
