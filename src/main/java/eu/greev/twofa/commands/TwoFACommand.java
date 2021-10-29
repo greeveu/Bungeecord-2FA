@@ -14,18 +14,18 @@ import net.md_5.bungee.api.plugin.Command;
 import java.security.GeneralSecurityException;
 
 public class TwoFACommand extends Command {
-    String helpMessage = Main.getInstance().config.getString("messages.help");
-    String alreadyActive = Main.getInstance().config.getString("messages.alreadyactive");
-    String activated = Main.getInstance().config.getString("messages.activated");
-    String removeAuth = Main.getInstance().config.getString("messages.removeauth");
-    String notLoggedIn = Main.getInstance().config.getString("messages.notloggedin");
-    String logoutMessage = Main.getInstance().config.getString("messages.logoutmessage");
-    String servername = Main.getInstance().config.getString("servername");
-    String missingCode = Main.getInstance().config.getString("messages.missingcode");
-    String errorOccurred = Main.getInstance().config.getString("messages.errorocurred");
-    String codeIsInvalid = Main.getInstance().config.getString("messages.codeisinvalid");
-    String successfulActivated = Main.getInstance().config.getString("messages.successfulcctivated");
-    String hovertext = Main.getInstance().config.getString("messages.hovertext");
+    String helpMessage = Main.getInstance().getConfig().getString("messages.help");
+    String alreadyActive = Main.getInstance().getConfig().getString("messages.alreadyactive");
+    String activated = Main.getInstance().getConfig().getString("messages.activated");
+    String removeAuth = Main.getInstance().getConfig().getString("messages.removeauth");
+    String notLoggedIn = Main.getInstance().getConfig().getString("messages.notloggedin");
+    String logoutMessage = Main.getInstance().getConfig().getString("messages.logoutmessage");
+    String servername = Main.getInstance().getConfig().getString("servername");
+    String missingCode = Main.getInstance().getConfig().getString("messages.missingcode");
+    String errorOccurred = Main.getInstance().getConfig().getString("messages.errorocurred");
+    String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
+    String successfulActivated = Main.getInstance().getConfig().getString("messages.successfulcctivated");
+    String hovertext = Main.getInstance().getConfig().getString("messages.hovertext");
 
     public TwoFACommand() {
         super("2fa");
@@ -67,9 +67,9 @@ public class TwoFACommand extends Command {
                         if (MySQLMethodes.getLastIP(uuid).equalsIgnoreCase("just_activated")) {
                             try {
                                 String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
-                                if (Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret).equals(code) ||
-                                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                                if (Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret).equals(code) ||
+                                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code) || //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) { //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
                                     MySQLMethodes.setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
                                     player.sendMessage(successfulActivated.replace("&", "§"));
                                 } else {
@@ -117,10 +117,10 @@ public class TwoFACommand extends Command {
                         player.sendMessage(alreadyActive.replace("&", "§"));
                         return;
                     }
-                    String secret = Main.getInstance().twoFactorAuthUtil.generateBase32Secret();
+                    String secret = Main.getInstance().getTwoFactorAuthUtil().generateBase32Secret();
                     MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
-                    TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
-                    message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret)));
+                    TextComponent message = new TextComponent(activated.replace("&", "§").replace("%secret%", secret).replace("%link%", Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), servername, secret)));
+                    message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), servername, secret)));
                     message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext.replace("&", "§")).create()));
                     player.sendMessage(message);
                 }

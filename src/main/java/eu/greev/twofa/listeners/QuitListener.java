@@ -9,9 +9,8 @@ import net.md_5.bungee.event.EventHandler;
 public class QuitListener implements Listener {
 
     @EventHandler
-    public void onQuti(PlayerDisconnectEvent event) {
+    public void onQuit(PlayerDisconnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
-        Main.getInstance().waitingForAuth.remove(player);
+        Main.getInstance().getWaitingForAuth().remove(player);
     }
-
 }

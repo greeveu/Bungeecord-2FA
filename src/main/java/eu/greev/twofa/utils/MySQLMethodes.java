@@ -7,8 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class MySQLMethodes {
-
-    static MySQL mySQL = Main.getInstance().mySQL;
+    private static final MySQL mySQL = Main.getInstance().getMySQL();
 
     public static void createTable() {
         try {

@@ -9,16 +9,16 @@ import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 public class ServerSwitchListener implements Listener {
-    String waitingForAuthCode = Main.getInstance().config.getString("messages.waitingforauthcode");
-    String authEnabled = Main.getInstance().config.getString("messages.authenabled");
-    String needToActivate = Main.getInstance().config.getString("messages.needtoactivate");
+    String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
+    String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
+    String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
         ProxiedPlayer player = event.getPlayer();
         String uuid = player.getUniqueId().toString();
-        if (!Main.getInstance().waitingForAuth.contains(player)) {
-            Main.getInstance().waitingForAuth.add(player); //Add player directly and remove him later incase the database needs more time so the player cant execute any commands while waiting for the db
+        if (!Main.getInstance().getWaitingForAuth().contains(player)) {
+            Main.getInstance().getWaitingForAuth().add(player); //Add player directly and remove him later incase the database needs more time so the player cant execute any commands while waiting for the db
             ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
                         if (MySQLMethodes.hasRecord(uuid)) {
                             String lastip = MySQLMethodes.getLastIP(uuid);
@@ -31,7 +31,7 @@ public class ServerSwitchListener implements Listener {
                             }
                             player.sendMessage(authEnabled.replace("&", "§"));
                         } else {
-                            Main.getInstance().waitingForAuth.remove(player); //Remove the player if he hasnt 2fa enabled
+                            Main.getInstance().getWaitingForAuth().remove(player); //Remove the player if he hasnt 2fa enabled
                         }
                     }
             );
