@@ -4,7 +4,7 @@ import eu.greev.twofa.commands.TwoFACommand;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
-import eu.greev.twofa.utils.ConfigHelper;
+import eu.greev.twofa.utils.ConfigUtils;
 import eu.greev.twofa.utils.MySQL;
 import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
@@ -12,16 +12,15 @@ import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
-import org.simpleyaml.configuration.file.YamlFile;
+import net.md_5.bungee.config.Configuration;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class Main extends Plugin {
-    private final ConfigHelper configHelper = new ConfigHelper();
-
     @Getter private static Main instance;
-    @Getter private YamlFile config;
+    @Getter private Configuration config;
     @Getter private MySQL mySQL;
     @Getter private MySQLMethods mySQLMethods;
     @Getter private final List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
@@ -30,7 +29,14 @@ public final class Main extends Plugin {
     @Override
     public void onEnable() {
         instance = this;
-        this.config = this.configHelper.getConfig("plugins/2FA_Config.yml");
+
+        try {
+            this.config = ConfigUtils.getCustomConfig("2FA_Config.yml");
+        } catch (IOException e) {
+            e.printStackTrace();
+            this.onDisable();
+            return;
+        }
 
         this.mySQL = new MySQL(
             this.config.getString("mysql.host"),
