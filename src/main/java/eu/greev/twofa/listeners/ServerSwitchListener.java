@@ -26,18 +26,18 @@ public class ServerSwitchListener implements Listener {
 
         Main.getInstance().getWaitingForAuth().add(player); //Add player directly and remove him later in case the database needs more time so the player can't execute any commands while waiting for the db
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (MySQLMethodes.hasRecord(uuid)) {
-                String lastIp = MySQLMethodes.getLastIP(uuid);
-                if (lastIp.equals("just_activated")) {
-                    player.sendMessage(new TextComponent(this.needToActivate.replace("&", "§")));
-                    return;
-                }
-                if (!lastIp.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
-                    return;
-                }
-                player.sendMessage(new TextComponent(this.authEnabled.replace("&", "§")));
-            } else {
+            if (!MySQLMethodes.hasRecord(uuid)) {
                 Main.getInstance().getWaitingForAuth().remove(player); //Remove the player if he hasnt 2fa enabled
+                return;
+            }
+
+            String lastIp = MySQLMethodes.getLastIP(uuid);
+            if (lastIp.equals("just_activated")) {
+                player.sendMessage(new TextComponent(this.needToActivate.replace("&", "§")));
+                return;
+            }
+            if (lastIp.equals(player.getPendingConnection().getAddress().getAddress().toString())) {
+                player.sendMessage(new TextComponent(this.authEnabled.replace("&", "§")));
             }
         });
     }

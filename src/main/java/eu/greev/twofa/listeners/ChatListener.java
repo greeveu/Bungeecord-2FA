@@ -19,12 +19,12 @@ public class ChatListener implements Listener {
     @EventHandler
     public void onChat(ChatEvent event) {
         ProxiedPlayer player = (ProxiedPlayer) event.getSender();
-        String message = event.getMessage();
         if (!Main.getInstance().getWaitingForAuth().contains(player)) {
             return;
         }
 
         event.setCancelled(true);
+        String message = event.getMessage();
         if (message.length() != 6) {
             player.sendMessage(new TextComponent(this.waitingForAuthCode.replace("&", "§")));
             return;

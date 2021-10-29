@@ -76,23 +76,24 @@ public class TwoFACommand extends Command {
                 player.sendMessage(new TextComponent(this.notLoggedIn.replace("&", "§")));
                 return;
             }
+            if (!MySQLMethodes.getLastIP(uuid).equalsIgnoreCase("just_activated")) {
+                return;
+            }
 
-            if (MySQLMethodes.getLastIP(uuid).equalsIgnoreCase("just_activated")) {
-                try {
-                    String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
-                    if (Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret).equals(code)
-                        || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code)  //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                        || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
-                    {
-                        MySQLMethodes.setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
-                        player.sendMessage(new TextComponent(this.successfulActivated.replace("&", "§")));
-                    } else {
-                        player.sendMessage(new TextComponent(this.codeIsInvalid.replace("&", "§")));
-                    }
-                } catch (GeneralSecurityException e) {
-                    e.printStackTrace();
-                    player.sendMessage(new TextComponent(this.errorOccurred.replace("&", "§")));
+            try {
+                String secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+                if (Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret).equals(code)
+                    || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - 30000).equals(code)  //-30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                    || Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + 30000).equals(code)) //+30 Seconds in case the users time isnt exactly correct and / or he wasnt fast enough
+                {
+                    MySQLMethodes.setIP(uuid, player.getPendingConnection().getAddress().getAddress().toString());
+                    player.sendMessage(new TextComponent(this.successfulActivated.replace("&", "§")));
+                } else {
+                    player.sendMessage(new TextComponent(this.codeIsInvalid.replace("&", "§")));
                 }
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                player.sendMessage(new TextComponent(this.errorOccurred.replace("&", "§")));
             }
         });
     }
