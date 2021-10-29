@@ -1,28 +1,30 @@
 package eu.greev.twofa.utils;
 
-import eu.greev.twofa.Main;
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class MySQLMethodes {
-    private static final MySQL mySQL = Main.getInstance().getMySQL();
+public class MySQLMethods {
+    private final MySQL mySQL;
 
-    public static void createTable() {
+    public MySQLMethods(MySQL mySQL) {
+        this.mySQL = mySQL;
+    }
+
+    public void createTable() {
         try {
-            mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(50) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");
+            this.mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(50) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static boolean hasRecord(String uuid) {
+    public boolean hasRecord(String uuid) {
         try {
             String sql = "SELECT 1 FROM 2fa_players WHERE uuid = ?";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = this.mySQL.preparedStatement(sql, list);
             return rs.next();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -30,72 +32,70 @@ public class MySQLMethodes {
         return false;
     }
 
-    public static String getSecret(String uuid) {
+    public String getSecret(String uuid) {
         try {
             String sql = "SELECT `secret` FROM 2fa_players WHERE uuid = ?";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = this.mySQL.preparedStatement(sql, list);
             if (rs.next()) {
                 return rs.getString("secret");
-            } else {
-                return "none";
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return "none";
     }
 
-    public static String getLastIP(String uuid) {
+    public String getLastIP(String uuid) {
         try {
             String sql = "SELECT `last_ip` FROM 2fa_players WHERE uuid = ?";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
-            ResultSet rs = mySQL.preparedStatement(sql, list);
+            ResultSet rs = this.mySQL.preparedStatement(sql, list);
             if (rs.next()) {
                 return rs.getString("last_ip");
-            } else {
-                return "none";
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return "none";
     }
 
-    public static void addNewPlayer(String uuid, String secret, String ip) {
+    public void addNewPlayer(String uuid, String secret, String ip) {
         try {
             String sql = "INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`) VALUES (?,?,?)";
             ArrayList<Object> list = new ArrayList<>();
             list.add(uuid);
             list.add(secret);
             list.add(ip);
-            mySQL.preparedStatementUpdate(sql, list);
+            this.mySQL.preparedStatementUpdate(sql, list);
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void removePlayer(String uuid) {
+    public void removePlayer(String uuid) {
         try {
-            mySQL.updateQuery("DELETE FROM `2fa_players` WHERE `uuid` = '" + uuid + "'");
+            this.mySQL.updateQuery("DELETE FROM `2fa_players` WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void setIP(String uuid, String ip) {
+    public void setIP(String uuid, String ip) {
         try {
-            mySQL.updateQuery("UPDATE `2fa_players` SET `last_ip` = '" + ip + "' WHERE `uuid` = '" + uuid + "'");
+            this.mySQL.updateQuery("UPDATE `2fa_players` SET `last_ip` = '" + ip + "' WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public static void setSecret(String uuid, String secret) {
+    public void setSecret(String uuid, String secret) {
         try {
-            mySQL.updateQuery("UPDATE `2fa_players` SET `secret` = '" + secret + "' WHERE `uuid` = '" + uuid + "'");
+            this.mySQL.updateQuery("UPDATE `2fa_players` SET `secret` = '" + secret + "' WHERE `uuid` = '" + uuid + "'");
         } catch (SQLException e) {
             e.printStackTrace();
         }

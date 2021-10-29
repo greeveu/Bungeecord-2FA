@@ -1,7 +1,7 @@
 package eu.greev.twofa.utils;
 
 import java.sql.*;
-import java.util.ArrayList;
+import java.util.List;
 
 public class MySQL {
     // Proporties
@@ -65,7 +65,7 @@ public class MySQL {
         this.connection = null;
     }
 
-    public ResultSet preparedStatement(String query, ArrayList<Object> values) throws SQLException {
+    public ResultSet preparedStatement(String query, List<Object> values) throws SQLException {
         if (!this.isConnected())
             this.connect();
 
@@ -78,7 +78,7 @@ public class MySQL {
         return ps.getResultSet();
     }
 
-    public void preparedStatementUpdate(String query, ArrayList<Object> values) throws SQLException {
+    public void preparedStatementUpdate(String query, List<Object> values) throws SQLException {
         if (!this.isConnected())
             this.connect();
 
