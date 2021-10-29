@@ -9,6 +9,10 @@ import java.util.ArrayList;
 public class MySQLMethodes {
     private static final MySQL mySQL = Main.getInstance().getMySQL();
 
+    private MySQLMethodes() {
+        throw new IllegalStateException("Utility class");
+    }
+
     public static void createTable() {
         try {
             mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(50) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");

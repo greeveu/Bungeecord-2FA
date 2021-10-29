@@ -21,9 +21,9 @@ public final class Main extends Plugin {
     private final ConfigHelper configHelper = new ConfigHelper();
 
     @Getter private static Main instance;
+    @Getter private YamlFile config;
     @Getter private MySQL mySQL;
     @Getter private final List<ProxiedPlayer> waitingForAuth = new ArrayList<>();
-    @Getter private YamlFile config;
     @Getter private final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
 
     @Override
