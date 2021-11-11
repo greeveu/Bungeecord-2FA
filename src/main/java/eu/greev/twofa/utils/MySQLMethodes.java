@@ -1,9 +1,7 @@
 package eu.greev.twofa.utils;
 
-import com.google.common.hash.Hashing;
 import eu.greev.twofa.Main;
 
-import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -20,7 +18,14 @@ public class MySQLMethodes {
 
     public static void createTable() {
         try {
-            mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players` ( `uuid` VARCHAR(64) NOT NULL , `secret` VARCHAR(16) NOT NULL , `last_ip` VARCHAR(50) NOT NULL , PRIMARY KEY (`uuid`)) ENGINE = InnoDB;");
+            mySQL.updateQuery("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players`" +
+                    "(" +
+                    "`uuid` VARCHAR(64) NOT NULL, " +
+                    "`secret`  VARCHAR(16) NOT NULL, " +
+                    "`last_ip` VARCHAR(64) NOT NULL, " +
+                    "`status`  VARCHAR(16) NOT NULL, " +
+                    "PRIMARY KEY (`uuid`)" +
+                    ") ENGINE = InnoDB;");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -50,6 +55,19 @@ public class MySQLMethodes {
         return Optional.empty();
     }
 
+    public static TwoFactorState getState(String uuid) {
+        try {
+            String sql = "SELECT `status` FROM 2fa_players WHERE uuid = ?";
+            ResultSet rs = mySQL.preparedStatement(sql, Collections.singletonList(uuid));
+            if (rs.next()) {
+                return TwoFactorState.valueOf(rs.getString("status"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static Optional<String> getLastIP(String uuid) {
         try {
             String sql = "SELECT `last_ip` FROM 2fa_players WHERE uuid = ?";
@@ -63,11 +81,10 @@ public class MySQLMethodes {
         return Optional.empty();
     }
 
-    public static void addNewPlayer(String uuid, String secret, String ip) {
-        String hashedIp = hashIp(ip);
+    public static void addNewPlayer(String uuid, String secret, String ip, TwoFactorState status) {
         try {
-            String sql = "INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`) VALUES (?,?,?)";
-            mySQL.preparedStatementUpdate(sql, Arrays.asList(uuid, secret, hashedIp));
+            String sql = "INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`, `status`) VALUES (?,?,?,?)";
+            mySQL.preparedStatementUpdate(sql, Arrays.asList(uuid, secret, ip, String.valueOf(status)));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -83,10 +100,18 @@ public class MySQLMethodes {
     }
 
     public static void setIP(String uuid, String ip) {
-        String hashedIp = hashIp(ip);
         try {
             String sql = "UPDATE `2fa_players` SET `last_ip` = ? WHERE `uuid` = ?";
-            mySQL.preparedStatementUpdate(sql, Arrays.asList(hashedIp, uuid));
+            mySQL.preparedStatementUpdate(sql, Arrays.asList(ip, uuid));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void setState(String uuid, TwoFactorState state) {
+        try {
+            String sql = "UPDATE `2fa_players` SET `status` = ? WHERE `uuid` = ?";
+            mySQL.preparedStatementUpdate(sql, Arrays.asList(String.valueOf(state), uuid));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -99,9 +124,5 @@ public class MySQLMethodes {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    private static String hashIp(String ip) {
-        return Hashing.sha256().hashString(ip, StandardCharsets.UTF_8).toString();
     }
 }

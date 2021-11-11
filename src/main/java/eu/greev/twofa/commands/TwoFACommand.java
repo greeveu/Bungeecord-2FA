@@ -3,6 +3,7 @@ package eu.greev.twofa.commands;
 import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.MySQLMethodes;
+import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -86,7 +87,9 @@ public class TwoFACommand extends Command {
                 return;
             }
 
-            if (!lastIP.get().equals("just_activated")) {
+            TwoFactorState twoFactorState = MySQLMethodes.getState(uuid); //TODO: Combine into one request with the getLastIp. Maybe save it into the player itself
+                                                                          //      Like this: spieler.getTwoFactorState() == TwoFactorState.ACTIVATED
+            if (twoFactorState == TwoFactorState.ACTIVATED) {
                 return;
             }
 
@@ -106,8 +109,7 @@ public class TwoFACommand extends Command {
 
                 player.sendMessage(new TextComponent(successfulActivated.replace("&", "§")));
 
-                ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(),
-                        () -> MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString()));
+                MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
                 player.sendMessage(new TextComponent(errorOccurred.replace("&", "§")));
@@ -147,9 +149,16 @@ public class TwoFACommand extends Command {
             String secret = Main.getInstance().getTwoFactorAuthUtil().generateBase32Secret();
 
             spieler.setSecret(secret);
+
             String url = Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), servername, secret);
 
-            MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
+            MySQLMethodes.addNewPlayer(
+                    player.getUniqueId().toString(),
+                    secret,
+                    player.getPendingConnection().getAddress().getAddress().toString(),
+                    TwoFactorState.ACTIVATED
+            );
+
             TextComponent message = new TextComponent(activated
                     .replace("&", "§")
                     .replace("%secret%", secret)

@@ -1,6 +1,7 @@
 package eu.greev.twofa.entities;
 
 import eu.greev.twofa.utils.AuthState;
+import eu.greev.twofa.utils.TwoFactorState;
 import lombok.Getter;
 import lombok.Setter;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -18,6 +19,10 @@ public class Spieler {
     @Getter
     @Setter
     private AuthState authState;
+
+    @Getter
+    @Setter
+    private TwoFactorState twoFactorState;
 
     @Getter
     @Setter

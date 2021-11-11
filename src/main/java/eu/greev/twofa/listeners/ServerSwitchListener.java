@@ -4,6 +4,7 @@ import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethodes;
+import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -34,6 +35,8 @@ public class ServerSwitchListener implements Listener {
             Spieler.add(spieler);
         }
 
+        //TODO: If player has 2fa.forceenabled permission force him to activate 2fa
+
         if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
             asyncDatabaseAndPlayerUpdate(player, spieler, uuid);
             return;
@@ -58,9 +61,11 @@ public class ServerSwitchListener implements Listener {
             }
 
             Optional<String> lastip = MySQLMethodes.getLastIP(uuid);
-            Optional<String> secret = MySQLMethodes.getSecret(player.getUniqueId().toString());
+            Optional<String> secret = MySQLMethodes.getSecret(uuid);
+            TwoFactorState twoFactorState = MySQLMethodes.getState(uuid); //TODO: One database call for all of them, if thats done I can also remove the has Record call and just check if there is data.
 
             secret.ifPresent(spieler::setSecret);
+            spieler.setTwoFactorState(twoFactorState);
 
             if (!lastip.isPresent()) {
                 return;
