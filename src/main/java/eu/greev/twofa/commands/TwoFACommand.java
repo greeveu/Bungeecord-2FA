@@ -30,6 +30,7 @@ public class TwoFACommand extends Command {
     private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
     private final String successfulActivated = Main.getInstance().getConfig().getString("messages.successfulcctivated");
     private final String hovertext = Main.getInstance().getConfig().getString("messages.hovertext");
+    private final int millisecondTimingThreshold = 30000;
 
     public TwoFACommand() {
         super("2fa");
@@ -75,7 +76,8 @@ public class TwoFACommand extends Command {
 
     private void activate(ProxiedPlayer player, String code) {
         String uuid = player.getUniqueId().toString();
-        Spieler spieler = Main.getSpieler(player);
+        Spieler spieler = Spieler.get(player.getUniqueId());
+
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
             Optional<String> lastIP = MySQLMethodes.getLastIP(uuid);
 
@@ -92,9 +94,9 @@ public class TwoFACommand extends Command {
                 String secret = spieler.getSecret();
 
                 List<String> validCodes = Arrays.asList(
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() - 30000),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, System.currentTimeMillis() + 30000)
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret),
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() - millisecondTimingThreshold),
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, System.currentTimeMillis() + millisecondTimingThreshold)
                 );
 
                 if (!validCodes.contains(code)) {
@@ -136,16 +138,16 @@ public class TwoFACommand extends Command {
     }
 
     private void enableTFA(ProxiedPlayer player) {
-        Spieler spieler = Main.getSpieler(player);
+        Spieler spieler = Spieler.get(player.getUniqueId());
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
             if (MySQLMethodes.hasRecord(player.getUniqueId().toString())) {
                 player.sendMessage(new TextComponent(alreadyActive.replace("&", "§")));
                 return;
             }
-            String secret = Main.getInstance().twoFactorAuthUtil.generateBase32Secret();
+            String secret = Main.getInstance().getTwoFactorAuthUtil().generateBase32Secret();
 
             spieler.setSecret(secret);
-            String url = Main.getInstance().twoFactorAuthUtil.qrImageUrl(player.getName(), servername, secret);
+            String url = Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), servername, secret);
 
             MySQLMethodes.addNewPlayer(player.getUniqueId().toString(), secret, "just_activated");
             TextComponent message = new TextComponent(activated

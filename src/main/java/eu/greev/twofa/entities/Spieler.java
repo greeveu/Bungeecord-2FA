@@ -25,11 +25,17 @@ public class Spieler {
 
     public Spieler(ProxiedPlayer player) {
         this.player = player;
-
-        SPIELER_MAP.put(player.getUniqueId(), this);
     }
 
     public static Spieler get(UUID uuid) {
         return SPIELER_MAP.get(uuid);
+    }
+
+    public static void add(Spieler spieler) {
+        SPIELER_MAP.put(spieler.getPlayer().getUniqueId(), spieler);
+    }
+
+    public static void remove(UUID uuid) {
+        SPIELER_MAP.remove(uuid);
     }
 }

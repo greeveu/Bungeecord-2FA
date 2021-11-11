@@ -30,7 +30,7 @@ public class ChatListener implements Listener {
             return;
         }
 
-        Spieler spieler = Main.getSpieler(player);
+        Spieler spieler = Spieler.get(player.getUniqueId());
         String message = event.getMessage();
 
         if (spieler.getAuthState() != AuthState.WAITING_FOR_AUTH) {
@@ -45,9 +45,9 @@ public class ChatListener implements Listener {
                 String secret = spieler.getSecret();
 
                 List<String> validCodes = Arrays.asList(
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, Instant.now().toEpochMilli() - 30000),
-                        Main.getInstance().twoFactorAuthUtil.generateCurrentNumber(secret, Instant.now().toEpochMilli() + 30000)
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret),
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, Instant.now().toEpochMilli() - 30000),
+                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, Instant.now().toEpochMilli() + 30000)
                 );
 
                 //The Code was Invalid

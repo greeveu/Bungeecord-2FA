@@ -1,7 +1,6 @@
 package eu.greev.twofa;
 
 import eu.greev.twofa.commands.TwoFACommand;
-import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
@@ -11,31 +10,24 @@ import eu.greev.twofa.utils.MySQLMethodes;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Plugin;
 import org.simpleyaml.configuration.file.YamlFile;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public final class Main extends Plugin {
 
-    private static Main main;
-    public static final Map<ProxiedPlayer, Spieler> PP_TO_S = new HashMap<>();
-    public final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     private final ConfigHelper configHelper = new ConfigHelper();
+    @Getter
+    public static Main instance;
+    @Getter
+    private final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     @Getter
     private YamlFile config;
     @Getter
     private MySQL mySQL;
 
-    public static Main getInstance() {
-        return main;
-    }
-
     @Override
     public void onEnable() {
-        main = this;
+        instance = this;
         config = configHelper.getConfig("plugins/2FA_Config.yml");
 
         mySQL = new MySQL(
@@ -65,17 +57,5 @@ public final class Main extends Plugin {
     @Override
     public void onDisable() {
         getMySQL().disconnect();
-    }
-
-    public static Spieler getSpieler(ProxiedPlayer player) {
-        return PP_TO_S.get(player);
-    }
-
-    public static void removeSpieler(ProxiedPlayer player) {
-        PP_TO_S.remove(player);
-    }
-
-    public static void addSpieler(ProxiedPlayer player, Spieler spieler) {
-        PP_TO_S.put(player, spieler);
     }
 }

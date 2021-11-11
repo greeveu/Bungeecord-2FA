@@ -1,10 +1,11 @@
 package eu.greev.twofa.utils;
 
+import com.google.common.hash.Hashing;
 import eu.greev.twofa.Main;
 
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
@@ -63,9 +64,10 @@ public class MySQLMethodes {
     }
 
     public static void addNewPlayer(String uuid, String secret, String ip) {
+        String hashedIp = hashIp(ip);
         try {
             String sql = "INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`) VALUES (?,?,?)";
-            mySQL.preparedStatementUpdate(sql, Arrays.asList(uuid, secret, ip));
+            mySQL.preparedStatementUpdate(sql, Arrays.asList(uuid, secret, hashedIp));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -81,9 +83,10 @@ public class MySQLMethodes {
     }
 
     public static void setIP(String uuid, String ip) {
+        String hashedIp = hashIp(ip);
         try {
             String sql = "UPDATE `2fa_players` SET `last_ip` = ? WHERE `uuid` = ?";
-            mySQL.preparedStatementUpdate(sql, Arrays.asList(ip, uuid));
+            mySQL.preparedStatementUpdate(sql, Arrays.asList(hashedIp, uuid));
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -96,5 +99,9 @@ public class MySQLMethodes {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private static String hashIp(String ip) {
+        return Hashing.sha256().hashString(ip, StandardCharsets.UTF_8).toString();
     }
 }

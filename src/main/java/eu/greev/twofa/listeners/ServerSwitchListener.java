@@ -26,12 +26,12 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        Spieler spieler = Main.getSpieler(player);
+        Spieler spieler = Spieler.get(player.getUniqueId());
         String uuid = player.getUniqueId().toString();
 
         if (spieler == null) {
             spieler = new Spieler(player);
-            Main.addSpieler(player, spieler);
+            Spieler.add(spieler);
         }
 
         if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
