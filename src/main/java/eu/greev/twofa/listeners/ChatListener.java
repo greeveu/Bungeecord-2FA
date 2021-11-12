@@ -44,7 +44,7 @@ public class ChatListener implements Listener {
 
         //If message is not a 2fa token return
         if (message.length() != 6) {
-            if (spieler.getAuthState() == AuthState.FORCED_ENABLE) {
+            if (spieler.getAuthState() == AuthState.FORCED_ENABLE) { //TODO: Eww, format this if else
                 if (message.toLowerCase().startsWith("/2fa")) {
                     event.setCancelled(false);
                     return;

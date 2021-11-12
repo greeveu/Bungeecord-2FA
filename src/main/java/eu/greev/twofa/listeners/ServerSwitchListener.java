@@ -46,7 +46,7 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        if (spieler.getAuthState() == AuthState.FORCED_ENABLE) {
+        if (spieler.getAuthState() == AuthState.FORCED_ENABLE) { //TODO: Eww, format this if else
             player.sendMessage(new TextComponent(forceenable));
         } else {
             player.sendMessage(new TextComponent(waitingForAuthCode));
@@ -60,7 +60,7 @@ public class ServerSwitchListener implements Listener {
 
             //Remove the player if he hasnt 2fa enabled
             if (!has2faEnables) {
-                if (player.hasPermission("2fa.forceenable")) {
+                if (player.hasPermission("2fa.forceenable")) { //TODO: Eww, format this if else
                     spieler.setAuthState(AuthState.FORCED_ENABLE);
                 } else {
                     spieler.setAuthState(AuthState.NOT_ENABLED);
@@ -84,7 +84,7 @@ public class ServerSwitchListener implements Listener {
             if (spieler.getTwoFactorState() == TwoFactorState.ACTIVATED) {
                 player.sendMessage(new TextComponent(needToActivate));
 
-                if (player.hasPermission("2fa.forceenable")) {
+                if (player.hasPermission("2fa.forceenable")) { //TODO: Eww, format this if else
                     spieler.setAuthState(AuthState.FORCED_ENABLE);
                 } else {
                     spieler.setAuthState(AuthState.NOT_ENABLED);
