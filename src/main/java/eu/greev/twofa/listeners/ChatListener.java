@@ -5,6 +5,8 @@ import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
 import eu.greev.twofa.utils.MySQLMethodes;
+import eu.greev.twofa.utils.TwoFactorState;
+import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -21,6 +23,7 @@ public class ChatListener implements Listener {
     private final String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
     private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful").replace("&", "§");
     private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
+    private final String forceenable = Main.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -33,7 +36,7 @@ public class ChatListener implements Listener {
         Spieler spieler = Spieler.get(player.getUniqueId());
         String message = event.getMessage();
 
-        if (spieler.getAuthState() != AuthState.WAITING_FOR_AUTH) {
+        if (spieler.getAuthState() == AuthState.AUTHENTICATED || spieler.getAuthState() == AuthState.NOT_ENABLED) {
             return;
         }
 
@@ -41,7 +44,15 @@ public class ChatListener implements Listener {
 
         //If message is not a 2fa token return
         if (message.length() != 6) {
-            player.sendMessage(new TextComponent(waitingForAuthCode));
+            if (spieler.getAuthState() == AuthState.FORCED_ENABLE) {
+                if (message.toLowerCase().startsWith("/2fa")) {
+                    event.setCancelled(false);
+                    return;
+                }
+                player.sendMessage(new TextComponent(forceenable));
+            } else {
+                player.sendMessage(new TextComponent(waitingForAuthCode));
+            }
             return;
         }
 
@@ -57,6 +68,9 @@ public class ChatListener implements Listener {
             }
 
             spieler.setAuthState(AuthState.AUTHENTICATED);
+            ProxyServer.getInstance().getScheduler()
+                    .runAsync(Main.getInstance(), () -> MySQLMethodes.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
+
             player.sendMessage(new TextComponent(loginSuccessful));
 
             String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());

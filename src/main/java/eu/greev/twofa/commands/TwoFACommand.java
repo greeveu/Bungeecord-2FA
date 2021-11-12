@@ -31,6 +31,7 @@ public class TwoFACommand extends Command {
     private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
     private final String successfulActivated = Main.getInstance().getConfig().getString("messages.successfulcctivated").replace("&", "§");
     private final String hovertext = Main.getInstance().getConfig().getString("messages.hovertext").replace("&", "§");
+    private final String disableforforced = Main.getInstance().getConfig().getString("messages.disableforforced").replace("&", "§");
 
     public TwoFACommand() {
         super("2fa");
@@ -122,6 +123,10 @@ public class TwoFACommand extends Command {
     }
 
     private void disableTFA(ProxiedPlayer player) {
+        if (player.hasPermission("2fa.forceenable")) {
+            player.sendMessage(new TextComponent(disableforforced));
+            return;
+        }
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
             Spieler spieler = Spieler.get(player.getUniqueId());
             if (spieler.getAuthState() == AuthState.AUTHENTICATED) {
@@ -136,7 +141,7 @@ public class TwoFACommand extends Command {
     private void enableTFA(ProxiedPlayer player) {
         Spieler spieler = Spieler.get(player.getUniqueId());
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
-            if (spieler.getAuthState() != AuthState.NOT_ENABLED) {
+            if (spieler.getAuthState() == AuthState.AUTHENTICATED || spieler.getAuthState() == AuthState.WAITING_FOR_AUTH) {
                 player.sendMessage(new TextComponent(alreadyActive));
                 return;
             }
