@@ -6,22 +6,22 @@ import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
 import eu.greev.twofa.utils.ConfigUtils;
 import eu.greev.twofa.utils.MySQL;
-import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 
+import java.io.IOException;
+
 public final class Main extends Plugin {
 
-    private final ConfigHelper configHelper = new ConfigHelper();
     @Getter
     public static Main instance;
     @Getter
     private final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     @Getter
-    private YamlFile config;
+    private Configuration config;
     @Getter
     private MySQL mySQL;
     @Getter
@@ -50,8 +50,6 @@ public final class Main extends Plugin {
 
         );
         this.mySQL.connect();
-        this.mySQLMethods = new MySQLMethods(this.mySQL);
-        this.mySQLMethods.createTable();
 
         this.registerCommands();
         this.registerEvents();

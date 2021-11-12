@@ -4,7 +4,7 @@ import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
-import eu.greev.twofa.utils.MySQLMethodes;
+import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.ProxyServer;
@@ -105,8 +105,8 @@ public class TwoFACommand extends Command {
 
                 String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
 
-                MySQLMethodes.setIP(player.getUniqueId().toString(), hashedIp);
-                MySQLMethodes.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE);
+                MySQLMethods.setIP(player.getUniqueId().toString(), hashedIp);
+                MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE);
             } catch (GeneralSecurityException e) {
                 e.printStackTrace();
                 player.sendMessage(new TextComponent(errorOccurred));
@@ -119,7 +119,7 @@ public class TwoFACommand extends Command {
             Spieler spieler = Spieler.get(player.getUniqueId());
             if (spieler.getAuthState() == AuthState.AUTHENTICATED) {
                 player.sendMessage(new TextComponent(logoutMessage));
-                MySQLMethodes.setState(player.getUniqueId().toString(), TwoFactorState.LOGOUT);
+                MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.LOGOUT);
             } else {
                 player.sendMessage(new TextComponent(notLoggedIn));
             }
@@ -134,7 +134,7 @@ public class TwoFACommand extends Command {
         ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
             Spieler spieler = Spieler.get(player.getUniqueId());
             if (spieler.getAuthState() == AuthState.AUTHENTICATED) {
-                MySQLMethodes.removePlayer(player.getUniqueId().toString());
+                MySQLMethods.removePlayer(player.getUniqueId().toString());
                 player.sendMessage(new TextComponent(removeAuth));
             } else {
                 player.sendMessage(new TextComponent(notLoggedIn));
@@ -153,10 +153,10 @@ public class TwoFACommand extends Command {
 
             spieler.setSecret(secret);
 
-            String url = Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), servername, secret);
+            String url = Main.getInstance().getTwoFactorAuthUtil().qrImageUrl(player.getName(), serverName, secret);
             String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
 
-            MySQLMethodes.addNewPlayer(
+            MySQLMethods.addNewPlayer(
                     player.getUniqueId().toString(),
                     secret,
                     hashedIp,
@@ -170,8 +170,7 @@ public class TwoFACommand extends Command {
                     .replace("%link%", url)
             );
 
-            message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hovertext).create()));
-            System.out.println(url);
+            message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
             message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
 
             player.sendMessage(message);

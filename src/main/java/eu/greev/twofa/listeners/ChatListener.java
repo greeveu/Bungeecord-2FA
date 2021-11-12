@@ -4,7 +4,7 @@ import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
-import net.md_5.bungee.api.chat.TextComponent;
+import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -69,15 +69,15 @@ public class ChatListener implements Listener {
 
             spieler.setAuthState(AuthState.AUTHENTICATED);
             ProxyServer.getInstance().getScheduler()
-                    .runAsync(Main.getInstance(), () -> MySQLMethodes.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
+                    .runAsync(Main.getInstance(), () -> MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
 
             player.sendMessage(new TextComponent(loginSuccessful));
 
             String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
-            MySQLMethodes.setIP(player.getUniqueId().toString(), hashedIp);
+            MySQLMethods.setIP(player.getUniqueId().toString(), hashedIp);
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
-            player.sendMessage(new TextComponent(errorOcurred));
+            player.sendMessage(new TextComponent(errorOccurred));
         }
     }
 

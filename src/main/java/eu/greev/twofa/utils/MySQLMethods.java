@@ -8,9 +8,8 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 public class MySQLMethods {
-    private final MySQL mySQL;
 
-    private MySQLMethodes() {
+    private MySQLMethods() {
         throw new IllegalStateException("Utility class");
     }
 
