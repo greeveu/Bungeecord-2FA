@@ -18,5 +18,4 @@ public class QuitListener implements Listener {
 
         Spieler.remove(player.getUniqueId());
     }
-
 }

@@ -7,7 +7,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 
-public class MySQLMethodes {
+public class MySQLMethods {
+    private final MySQL mySQL;
 
     private MySQLMethodes() {
         throw new IllegalStateException("Utility class");
@@ -48,6 +49,7 @@ public class MySQLMethodes {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return Optional.empty();
     }
 
@@ -63,6 +65,7 @@ public class MySQLMethodes {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 

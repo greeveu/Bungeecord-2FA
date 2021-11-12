@@ -25,16 +25,20 @@ public class TwoFACommand extends Command {
     private final String removeAuth = Main.getInstance().getConfig().getString("messages.removeauth").replace("&", "§");
     private final String notLoggedIn = Main.getInstance().getConfig().getString("messages.notloggedin").replace("&", "§");
     private final String logoutMessage = Main.getInstance().getConfig().getString("messages.logoutmessage").replace("&", "§");
-    private final String servername = Main.getInstance().getConfig().getString("servername").replace("&", "§");
+    private final String serverName = Main.getInstance().getConfig().getString("servername").replace("&", "§");
     private final String missingCode = Main.getInstance().getConfig().getString("messages.missingcode").replace("&", "§");
     private final String errorOccurred = Main.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
     private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
     private final String successfulActivated = Main.getInstance().getConfig().getString("messages.successfulcctivated").replace("&", "§");
-    private final String hovertext = Main.getInstance().getConfig().getString("messages.hovertext").replace("&", "§");
+    private final String hoverText = Main.getInstance().getConfig().getString("messages.hovertext").replace("&", "§");
     private final String disableforforced = Main.getInstance().getConfig().getString("messages.disableforforced").replace("&", "§");
 
     public TwoFACommand() {
         super("2fa");
+    }
+
+    private void sendHelpMessage(ProxiedPlayer player) {
+        player.sendMessage(new TextComponent(this.helpMessage.replace("&", "§")));
     }
 
     @Override
