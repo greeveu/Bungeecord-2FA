@@ -24,6 +24,8 @@ public final class Main extends Plugin {
     private YamlFile config;
     @Getter
     private MySQL mySQL;
+    @Getter
+    private static final int MILLISECOND_TIMING_THRESHOLD = 30000;
 
     @Override
     public void onEnable() {

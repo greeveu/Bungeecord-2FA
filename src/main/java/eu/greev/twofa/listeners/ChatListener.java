@@ -3,24 +3,24 @@ package eu.greev.twofa.listeners;
 import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
+import eu.greev.twofa.utils.HashingUtils;
 import eu.greev.twofa.utils.MySQLMethodes;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
+import net.md_5.bungee.api.event.TabCompleteEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
 import java.security.GeneralSecurityException;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 public class ChatListener implements Listener {
 
-    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
-    private final String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred");
-    private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful");
-    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+    private final String errorOcurred = Main.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
+    private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful").replace("&", "§");
+    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -39,33 +39,46 @@ public class ChatListener implements Listener {
 
         event.setCancelled(true);
 
-        if (message.length() == 6) {
+        //If message is not a 2fa token return
+        if (message.length() != 6) {
+            player.sendMessage(new TextComponent(waitingForAuthCode));
+            return;
+        }
 
-            try {
-                String secret = spieler.getSecret();
+        try {
+            String secret = spieler.getSecret();
 
-                List<String> validCodes = Arrays.asList(
-                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret),
-                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, Instant.now().toEpochMilli() - 30000),
-                        Main.getInstance().getTwoFactorAuthUtil().generateCurrentNumber(secret, Instant.now().toEpochMilli() + 30000)
-                );
+            Set<String> validCodes = Main.getInstance().getTwoFactorAuthUtil().generateNumbersWithOffset(secret, Main.getMILLISECOND_TIMING_THRESHOLD());
 
-                //The Code was Invalid
-                if (!validCodes.contains(message)) {
-                    player.sendMessage(new TextComponent(codeIsInvalid.replace("&", "§")));
-                    return;
-                }
-
-                spieler.setAuthState(AuthState.AUTHENTICATED);
-                player.sendMessage(new TextComponent(loginSuccessful.replace("&", "§")));
-
-                MySQLMethodes.setIP(player.getUniqueId().toString(), player.getPendingConnection().getAddress().getAddress().toString());
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                player.sendMessage(new TextComponent(errorOcurred.replace("&", "§")));
+            //The Code was Invalid
+            if (!validCodes.contains(message)) {
+                player.sendMessage(new TextComponent(codeIsInvalid));
+                return;
             }
-        } else {
-            player.sendMessage(new TextComponent(waitingForAuthCode.replace("&", "§")));
+
+            spieler.setAuthState(AuthState.AUTHENTICATED);
+            player.sendMessage(new TextComponent(loginSuccessful));
+
+            String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
+            MySQLMethodes.setIP(player.getUniqueId().toString(), hashedIp);
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+            player.sendMessage(new TextComponent(errorOcurred));
+        }
+    }
+
+    @EventHandler
+    public void onTab(TabCompleteEvent event) {
+        ProxiedPlayer player = (ProxiedPlayer) event.getSender();
+
+        if (!player.hasPermission("2fa.use")) {
+            return;
+        }
+
+        Spieler spieler = Spieler.get(player.getUniqueId());
+
+        if (spieler.getAuthState() == AuthState.WAITING_FOR_AUTH) {
+            event.setCancelled(true);
         }
     }
 }

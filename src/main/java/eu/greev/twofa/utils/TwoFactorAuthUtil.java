@@ -4,11 +4,13 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 /**
  * Two factor Java implementation for the Time-based One-Time Password (TOTP) algorithm.
@@ -118,6 +120,15 @@ public class TwoFactorAuthUtil {
         return zeroPrepend(truncatedHash, NUM_DIGITS_OUTPUT);
     }
 
+    public Set<String> generateNumbersWithOffset(String secret, int timeOffetMillis) throws GeneralSecurityException {
+        return new HashSet<>(
+                Arrays.asList(
+                        generateCurrentNumber(secret),
+                        generateCurrentNumber(secret, Instant.now().toEpochMilli() - timeOffetMillis),
+                        generateCurrentNumber(secret, Instant.now().toEpochMilli() + timeOffetMillis))
+        );
+    }
+
     /**
      * Return the QR image url thanks to Google. This can be shown to the user and scanned by the authenticator program
      * as an easy way to enter the secret.
@@ -125,19 +136,13 @@ public class TwoFactorAuthUtil {
      * NOTE: this must be URL escaped if it is to be put into a href on a web-page.
      */
     public String qrImageUrl(String keyId, String issuer, String secret) {
-        StringBuilder sb = new StringBuilder(256);
         try {
-            sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
-            sb.append("otpauth://totp/").append(URLEncoder.encode(issuer, "UTF-8")).append(":").append(URLEncoder.encode(keyId, "UTF-8"));
-            sb.append("?secret=")
-                    .append(URLEncoder.encode(secret, "UTF-8"))
-                    .append("&issuer=")
-                    .append(URLEncoder.encode(issuer, "UTF-8"))
-                    .append("&algorithm=SHA1&digits=6&period=30");
+            String data = "otpauth://totp/" + issuer + ":" + keyId + "?secret=" + secret + "&issuer=" + issuer + "&algorithm=SHA1&digits=6&period=30";
+            return "https://qr-code.greev.eu/?data=" + URLEncoder.encode(data, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
-        return sb.toString();
+        return null;
     }
 
     /**

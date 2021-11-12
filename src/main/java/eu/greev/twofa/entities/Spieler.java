@@ -3,6 +3,7 @@ package eu.greev.twofa.entities;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.TwoFactorState;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class Spieler {
     private static final Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
 
@@ -27,10 +29,6 @@ public class Spieler {
     @Getter
     @Setter
     private String secret;
-
-    public Spieler(ProxiedPlayer player) {
-        this.player = player;
-    }
 
     public static Spieler get(UUID uuid) {
         return SPIELER_MAP.get(uuid);

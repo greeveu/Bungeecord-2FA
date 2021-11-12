@@ -3,6 +3,7 @@ package eu.greev.twofa.listeners;
 import eu.greev.twofa.Main;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
+import eu.greev.twofa.utils.HashingUtils;
 import eu.greev.twofa.utils.MySQLMethodes;
 import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.ProxyServer;
@@ -15,9 +16,9 @@ import net.md_5.bungee.event.EventHandler;
 import java.util.Optional;
 
 public class ServerSwitchListener implements Listener {
-    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode");
-    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled");
-    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate");
+    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled").replace("&", "§");
+    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate").replace("&", "§");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -46,7 +47,7 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        player.sendMessage(new TextComponent(waitingForAuthCode.replace("&", "§")));
+        player.sendMessage(new TextComponent(waitingForAuthCode));
         event.setCancelled(true);
     }
 
@@ -60,9 +61,10 @@ public class ServerSwitchListener implements Listener {
                 return;
             }
 
+            //TODO: One database call for all of them, if thats done I can also remove the has Record call and just check if there is data.
             Optional<String> lastip = MySQLMethodes.getLastIP(uuid);
             Optional<String> secret = MySQLMethodes.getSecret(uuid);
-            TwoFactorState twoFactorState = MySQLMethodes.getState(uuid); //TODO: One database call for all of them, if thats done I can also remove the has Record call and just check if there is data.
+            TwoFactorState twoFactorState = MySQLMethodes.getState(uuid);
 
             secret.ifPresent(spieler::setSecret);
             spieler.setTwoFactorState(twoFactorState);
@@ -71,18 +73,19 @@ public class ServerSwitchListener implements Listener {
                 return;
             }
 
-            if (lastip.get().equals("just_activated")) {
-                player.sendMessage(new TextComponent(needToActivate.replace("&", "§")));
+            if (spieler.getTwoFactorState() == TwoFactorState.ACTIVATED) {
+                player.sendMessage(new TextComponent(needToActivate));
                 spieler.setAuthState(AuthState.NOT_ENABLED);
                 return;
             }
 
-            if (lastip.get().equals(player.getPendingConnection().getAddress().getAddress().toString())) {
+            String hasedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
+            if (lastip.get().equals(hasedIp) && twoFactorState != TwoFactorState.LOGOUT) {
                 spieler.setAuthState(AuthState.AUTHENTICATED);
                 return;
             }
 
-            player.sendMessage(authEnabled.replace("&", "§"));
+            player.sendMessage(new TextComponent(authEnabled));
         });
     }
 }

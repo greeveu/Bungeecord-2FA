@@ -2,8 +2,9 @@ package eu.greev.twofa.utils;
 
 import lombok.RequiredArgsConstructor;
 
-import java.sql.*;
-import java.util.List;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 @RequiredArgsConstructor
 public class MySQL {
@@ -14,7 +15,7 @@ public class MySQL {
     private final String password;
     private final String database;
 
-    private java.sql.Connection connection;
+    private Connection connection;
 
     // Functions
     public void connect() {
@@ -37,57 +38,17 @@ public class MySQL {
         this.connection = null;
     }
 
-    public ResultSet preparedStatement(String query, List<Object> values) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        try (PreparedStatement ps = this.connection.prepareStatement(query)) {
-            for (int i = 1; i <= values.size(); i++) {
-                ps.setObject(i, values.get(i - 1));
-            }
-
-            ps.execute();
-
-            return ps.getResultSet();
-        }
-    }
-
-    public void preparedStatementUpdate(String query, List<Object> values) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        try (PreparedStatement ps = this.connection.prepareStatement(query)) {
-            for (int i = 1; i <= values.size(); i++) {
-                ps.setObject(i, values.get(i - 1));
-            }
-            ps.executeUpdate();
-        }
-    }
-
-    public ResultSet query(String query) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        try (Statement sm = this.connection.createStatement()) {
-            return sm.executeQuery(query);
-        }
-    }
-
-    public int updateQuery(String query) throws SQLException {
-        if (this.isConnected())
-            this.connect();
-
-        try (Statement sm = this.connection.createStatement()) {
-            return sm.executeUpdate(query);
-        }
-    }
-
-    public boolean isConnected() {
+    public Connection getConnection() {
         try {
-            return this.connection != null && !this.connection.isClosed();
+            if (this.connection == null || this.connection.isClosed()) {
+                connect();
+                return connection;
+            }
+            return connection;
         } catch (SQLException e) {
-            return false;
+            e.printStackTrace();
         }
+        return null;
     }
 
 }
