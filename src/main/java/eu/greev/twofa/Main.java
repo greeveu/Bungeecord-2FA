@@ -33,7 +33,6 @@ public final class Main extends Plugin {
 
         try {
             this.config = ConfigUtils.getCustomConfig("2FA_Config.yml");
-
         } catch (IOException e) {
             e.printStackTrace();
             this.onDisable();
@@ -46,9 +45,8 @@ public final class Main extends Plugin {
                 this.config.getString("mysql.username"),
                 this.config.getString("mysql.password"),
                 this.config.getString("mysql.database")
-
-
         );
+
         this.mySQL.connect();
 
         this.registerCommands();

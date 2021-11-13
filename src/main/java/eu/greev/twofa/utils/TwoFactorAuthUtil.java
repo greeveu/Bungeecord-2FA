@@ -2,15 +2,11 @@ package eu.greev.twofa.utils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Two factor Java implementation for the Time-based One-Time Password (TOTP) algorithm.
@@ -135,14 +131,35 @@ public class TwoFactorAuthUtil {
      * <p>
      * NOTE: this must be URL escaped if it is to be put into a href on a web-page.
      */
-    public String qrImageUrl(String keyId, String issuer, String secret) {
-        try {
-            String data = "otpauth://totp/" + issuer + ":" + keyId + "?secret=" + secret + "&issuer=" + issuer + "&algorithm=SHA1&digits=6&period=30";
-            return "https://qr-code.greev.eu/?data=" + URLEncoder.encode(data, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return null;
+    public static String qrImageUrl(String keyId, String issuer, String secret, int numDigits, int imageDimension) {
+        return "https://qr-code.greev.eu/?data=" +
+                Base64.getEncoder().encodeToString(generateOtpAuthUrl(keyId, issuer, secret, numDigits).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Return the otp-auth part of the QR image which is suitable to be injected into other QR generators (e.g. JS
+     * generator).
+     *
+     * @param keyId     Name of the key that you want to show up in the users authentication application. Should already be
+     *                  URL encoded.
+     * @param secret    Secret string that will be used when generating the current number.
+     * @param numDigits The number of digits" of the OTP.
+     */
+    public static String generateOtpAuthUrl(String keyId, String issuer, String secret, int numDigits) {
+        StringBuilder sb = new StringBuilder(128);
+        addOtpAuthPart(keyId, issuer, secret, sb, numDigits);
+        return sb.toString();
+    }
+
+    private static void addOtpAuthPart(String keyId, String issuer, String secret, StringBuilder sb, int numDigits) {
+        sb.append("otpauth://totp/")
+                .append(keyId)
+                .append("?secret=")
+                .append(secret)
+                .append("&digits=")
+                .append(numDigits)
+                .append("&issuer=")
+                .append(issuer);
     }
 
     /**

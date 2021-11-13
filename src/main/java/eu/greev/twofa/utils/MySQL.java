@@ -20,6 +20,7 @@ public class MySQL {
     // Functions
     public void connect() {
         String url = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
+        System.out.println(url);
         try {
             this.connection = DriverManager.getConnection(url, this.username, this.password);
         } catch (SQLException ex) {
