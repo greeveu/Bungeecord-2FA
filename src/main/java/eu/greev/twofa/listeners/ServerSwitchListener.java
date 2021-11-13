@@ -1,6 +1,6 @@
 package eu.greev.twofa.listeners;
 
-import eu.greev.twofa.Main;
+import eu.greev.twofa.TwoFactorAuth;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
@@ -16,10 +16,10 @@ import net.md_5.bungee.event.EventHandler;
 import java.util.Optional;
 
 public class ServerSwitchListener implements Listener {
-    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
-    private final String authEnabled = Main.getInstance().getConfig().getString("messages.authenabled").replace("&", "§");
-    private final String needToActivate = Main.getInstance().getConfig().getString("messages.needtoactivate").replace("&", "§");
-    private final String forceenable = Main.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
+    private final String waitingForAuthCode = TwoFactorAuth.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+    private final String authEnabled = TwoFactorAuth.getInstance().getConfig().getString("messages.authenabled").replace("&", "§");
+    private final String needToActivate = TwoFactorAuth.getInstance().getConfig().getString("messages.needtoactivate").replace("&", "§");
+    private final String forceenable = TwoFactorAuth.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -55,7 +55,7 @@ public class ServerSwitchListener implements Listener {
     }
 
     private void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, Spieler spieler, String uuid) {
-        ProxyServer.getInstance().getScheduler().runAsync(Main.getInstance(), () -> {
+        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
             boolean has2faEnables = MySQLMethods.hasRecord(uuid);
 
             //Remove the player if he hasnt 2fa enabled

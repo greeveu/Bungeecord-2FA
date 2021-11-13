@@ -1,6 +1,6 @@
 package eu.greev.twofa.utils;
 
-import eu.greev.twofa.Main;
+import eu.greev.twofa.TwoFactorAuth;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,7 +13,7 @@ public class MySQLMethods {
         throw new IllegalStateException("Utility class");
     }
 
-    private static final MySQL mySQL = Main.getInstance().getMySQL();
+    private static final MySQL mySQL = TwoFactorAuth.getInstance().getMySQL();
 
     public static void createTable() {
         try (PreparedStatement ps = mySQL.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players`(`uuid` VARCHAR(64) NOT NULL, `secret` VARCHAR(16) NOT NULL, `last_ip` VARCHAR(64) NOT NULL, `status` VARCHAR(16) NOT NULL, PRIMARY KEY (`uuid`)) ENGINE = InnoDB;")) {

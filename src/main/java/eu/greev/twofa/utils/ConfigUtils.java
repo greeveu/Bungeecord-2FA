@@ -1,6 +1,6 @@
 package eu.greev.twofa.utils;
 
-import eu.greev.twofa.Main;
+import eu.greev.twofa.TwoFactorAuth;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -25,7 +25,7 @@ public class ConfigUtils {
     public static Configuration getCustomConfig(String configName) throws IOException {
         saveCustomConfigIfNotExist(configName);
 
-        return ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(Main.getInstance().getDataFolder(), configName));
+        return ConfigurationProvider.getProvider(YamlConfiguration.class).load(new File(TwoFactorAuth.getInstance().getDataFolder(), configName));
     }
 
     /**
@@ -34,7 +34,7 @@ public class ConfigUtils {
      * @param configName Name of custom config (with suffix)
      */
     public static void saveCustomConfigIfNotExist(String configName) {
-        Plugin plugin = Main.getInstance();
+        Plugin plugin = TwoFactorAuth.getInstance();
 
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdir();

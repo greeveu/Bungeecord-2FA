@@ -1,6 +1,6 @@
 package eu.greev.twofa.listeners;
 
-import eu.greev.twofa.Main;
+import eu.greev.twofa.TwoFactorAuth;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
@@ -19,11 +19,11 @@ import java.util.Set;
 
 public class ChatListener implements Listener {
 
-    private final String waitingForAuthCode = Main.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
-    private final String errorOccurred = Main.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
-    private final String loginSuccessful = Main.getInstance().getConfig().getString("messages.loginsuccessful").replace("&", "§");
-    private final String codeIsInvalid = Main.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
-    private final String forceenable = Main.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
+    private final String waitingForAuthCode = TwoFactorAuth.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+    private final String errorOccurred = TwoFactorAuth.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
+    private final String loginSuccessful = TwoFactorAuth.getInstance().getConfig().getString("messages.loginsuccessful").replace("&", "§");
+    private final String codeIsInvalid = TwoFactorAuth.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
+    private final String forceenable = TwoFactorAuth.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -59,7 +59,7 @@ public class ChatListener implements Listener {
         try {
             String secret = spieler.getSecret();
 
-            Set<String> validCodes = Main.getInstance().getTwoFactorAuthUtil().generateNumbersWithOffset(secret, Main.getMILLISECOND_TIMING_THRESHOLD());
+            Set<String> validCodes = TwoFactorAuth.getInstance().getTwoFactorAuthUtil().generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
 
             //The Code was Invalid
             if (!validCodes.contains(message)) {
@@ -69,7 +69,7 @@ public class ChatListener implements Listener {
 
             spieler.setAuthState(AuthState.AUTHENTICATED);
             ProxyServer.getInstance().getScheduler()
-                    .runAsync(Main.getInstance(), () -> MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
+                    .runAsync(TwoFactorAuth.getInstance(), () -> MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
 
             player.sendMessage(new TextComponent(loginSuccessful));
 

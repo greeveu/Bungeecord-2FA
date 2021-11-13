@@ -1,5 +1,7 @@
 package eu.greev.twofa;
 
+import eu.greev.twofa.api.API;
+import eu.greev.twofa.api.impl.APIImpl;
 import eu.greev.twofa.commands.TwoFACommand;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
@@ -14,10 +16,10 @@ import net.md_5.bungee.config.Configuration;
 
 import java.io.IOException;
 
-public final class Main extends Plugin {
+public final class TwoFactorAuth extends Plugin {
 
     @Getter
-    public static Main instance;
+    public static TwoFactorAuth instance;
     @Getter
     private final TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
     @Getter
@@ -26,10 +28,14 @@ public final class Main extends Plugin {
     private MySQL mySQL;
     @Getter
     private static final int MILLISECOND_TIMING_THRESHOLD = 30000;
+    @Getter
+    public API twoFactorApi;
 
     @Override
     public void onEnable() {
         instance = this;
+
+        twoFactorApi = new APIImpl();
 
         try {
             this.config = ConfigUtils.getCustomConfig("2FA_Config.yml");
