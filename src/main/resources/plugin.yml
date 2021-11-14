@@ -1,5 +1,5 @@
 name: 2FA
 author: MrKavatch
 version: ${project.version}
-main: eu.greev.twofa.Main
+main: eu.greev.twofa.TwoFactorAuth
 description: 2 Factor Authentication for Bungeecord
