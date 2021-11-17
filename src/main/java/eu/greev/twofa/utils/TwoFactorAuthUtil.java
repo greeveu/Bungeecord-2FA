@@ -2,12 +2,11 @@ package eu.greev.twofa.utils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Random;
+import java.time.Instant;
+import java.util.*;
 
 /**
  * Two factor Java implementation for the Time-based One-Time Password (TOTP) algorithm.
@@ -117,27 +116,50 @@ public class TwoFactorAuthUtil {
         return zeroPrepend(truncatedHash, NUM_DIGITS_OUTPUT);
     }
 
+    public Set<String> generateNumbersWithOffset(String secret, int timeOffetMillis) throws GeneralSecurityException {
+        return new HashSet<>(
+                Arrays.asList(
+                        generateCurrentNumber(secret),
+                        generateCurrentNumber(secret, Instant.now().toEpochMilli() - timeOffetMillis),
+                        generateCurrentNumber(secret, Instant.now().toEpochMilli() + timeOffetMillis))
+        );
+    }
+
     /**
      * Return the QR image url thanks to Google. This can be shown to the user and scanned by the authenticator program
      * as an easy way to enter the secret.
      * <p>
      * NOTE: this must be URL escaped if it is to be put into a href on a web-page.
      */
-    public String qrImageUrl(String keyId, String issuer, String secret) {
-        StringBuilder sb = new StringBuilder(256);
-        try {
-            sb.append("https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=");
-            sb.append("otpauth://totp/")
-                    .append(URLEncoder.encode(issuer + ":" + keyId, "UTF-8"));
-            sb.append("?secret=")
-                    .append(URLEncoder.encode(secret, "UTF-8"))
-                    .append("&issuer=")
-                    .append(URLEncoder.encode(issuer, "UTF-8"))
-                    .append("&algorithm=SHA1&digits=6&period=30");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+    public static String qrImageUrl(String keyId, String issuer, String secret, int numDigits, int imageDimension) {
+        return "https://qr-code.greev.eu/?data=" +
+                Base64.getEncoder().encodeToString(generateOtpAuthUrl(keyId, issuer, secret, numDigits).getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * Return the otp-auth part of the QR image which is suitable to be injected into other QR generators (e.g. JS
+     * generator).
+     *
+     * @param keyId     Name of the key that you want to show up in the users authentication application. Should already be
+     *                  URL encoded.
+     * @param secret    Secret string that will be used when generating the current number.
+     * @param numDigits The number of digits" of the OTP.
+     */
+    public static String generateOtpAuthUrl(String keyId, String issuer, String secret, int numDigits) {
+        StringBuilder sb = new StringBuilder(128);
+        addOtpAuthPart(keyId, issuer, secret, sb, numDigits);
         return sb.toString();
+    }
+
+    private static void addOtpAuthPart(String keyId, String issuer, String secret, StringBuilder sb, int numDigits) {
+        sb.append("otpauth://totp/")
+                .append(keyId)
+                .append("?secret=")
+                .append(secret)
+                .append("&digits=")
+                .append(numDigits)
+                .append("&issuer=")
+                .append(issuer);
     }
 
     /**

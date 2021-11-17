@@ -22,4 +22,6 @@ messages:
   needtoactivate: "&c[&42FA&c]&7 Es scheint so als wenn du 2FA bereits aktviert, jedoch noch nicht bestätigt hast. &c&lSo schützt es deinen Account noch nicht! &7Bestätige 2FA indem du /2fa activate <6 Stelliger Code aus der App> ausführst."
   loginsuccessful: "&c[&42FA&c]&7 Bestätigung erfolgreich! Du kannst nun normal Spielen."
   waitingforauthcode: "&c[&42FA&c]&7 Bitte gebe zuerst deinen 6 Stelligen Code im Chat ein, bevor du diese Aktion ausführst."
+  forceenable: '&c[&42FA&c]&c You need to enable 2FA before you can play. Use &e/2fa&c to enable 2FA.'
+  disableforforced: '&c[&42FA&c]&c You cant disable 2FA for your account!'
   hovertext: "&cLink öffnen"

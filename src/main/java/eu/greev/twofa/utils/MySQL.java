@@ -1,49 +1,21 @@
 package eu.greev.twofa.utils;
 
-import java.sql.*;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+
+@RequiredArgsConstructor
 public class MySQL {
     // Proporties
-    private String hostname;
-    private String port;
-    private String username;
-    private String password;
-    private String database;
+    private final String hostname;
+    private final String port;
+    private final String username;
+    private final String password;
+    private final String database;
 
-    private java.sql.Connection connection;
-
-    // Constructors
-    public MySQL() {
-        this.hostname = "localhost";
-        this.port = "3306";
-        this.username = "";
-        this.password = "";
-    }
-
-    public MySQL(String username, String password, String database) {
-        this.hostname = "localhost";
-        this.port = "3306";
-        this.username = username;
-        this.password = password;
-        this.database = database;
-    }
-
-    public MySQL(String hostname, String username, String password, String database) {
-        this.hostname = hostname;
-        this.port = "3306";
-        this.username = username;
-        this.password = password;
-        this.database = database;
-    }
-
-    public MySQL(String hostname, String port, String username, String password, String database) {
-        this.hostname = hostname;
-        this.port = port;
-        this.username = username;
-        this.password = password;
-        this.database = database;
-    }
+    private Connection connection;
 
     // Functions
     public void connect() {
@@ -60,104 +32,23 @@ public class MySQL {
         try {
             this.connection.close();
         } catch (SQLException e) {
-            this.connection = null;
+            e.printStackTrace();
         }
+
         this.connection = null;
     }
 
-    public ResultSet preparedStatement(String query, List<Object> values) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        PreparedStatement ps = this.connection.prepareStatement(query);
-        for (int i = 1; i <= values.size(); i++) {
-            ps.setObject(i, values.get(i - 1));
-        }
-        ps.execute();
-
-        return ps.getResultSet();
-    }
-
-    public void preparedStatementUpdate(String query, List<Object> values) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        PreparedStatement ps = this.connection.prepareStatement(query);
-        for (int i = 1; i <= values.size(); i++) {
-            ps.setObject(i, values.get(i - 1));
-        }
-        ps.executeUpdate();
-    }
-
-    public ResultSet query(String query) throws SQLException {
-        if (!this.isConnected())
-            this.connect();
-
-        Statement sm = this.connection.createStatement();
-
-        return sm.executeQuery(query);
-    }
-
-    public int updateQuery(String query) throws SQLException {
-        if (this.isConnected())
-            this.connect();
-
-        Statement sm = this.connection.createStatement();
-
-        return sm.executeUpdate(query);
-    }
-
-    // Getters and setters
-    public String getHostname() {
-        return this.hostname;
-    }
-
-    public void setHostname(String hostname) {
-        this.hostname = hostname;
-    }
-
-    public String getPort() {
-        return this.port;
-    }
-
-    public void setPort(String port) {
-        this.port = port;
-    }
-
-    public String getUsername() {
-        return this.username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return this.password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getDatabase() {
-        return this.database;
-    }
-
-    public void setDatabase(String database) {
-        this.database = database;
-    }
-
-    public java.sql.Connection getConnection() {
-        return this.connection;
-    }
-
-    public boolean isConnected() {
+    public Connection getConnection() {
         try {
-            return this.connection != null && !this.connection.isClosed();
+            if (this.connection == null || this.connection.isClosed()) {
+                connect();
+                return connection;
+            }
+            return connection;
         } catch (SQLException e) {
-            return false;
+            e.printStackTrace();
         }
+        return null;
     }
 
 }
