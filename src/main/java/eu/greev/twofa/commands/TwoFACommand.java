@@ -50,29 +50,30 @@ public class TwoFACommand extends Command {
             return;
         }
 
-        if (args.length != 0) {
-            switch (args[0].toLowerCase()) {
-                case "enable":
-                    enableTFA(player);
-                    break;
-                case "disable":
-                    disableTFA(player);
-                    break;
-                case "logout":
-                    logout(player);
-                    break;
-                case "activate":
-                    if (args.length == 2) {
-                        activate(player, args[1]);
-                    } else {
-                        player.sendMessage(new TextComponent(missingCode));
-                    }
-                    break;
-                default:
-                    player.sendMessage(new TextComponent(helpMessage));
-            }
-        } else {
+        if (args.length == 0) {
             player.sendMessage(new TextComponent(helpMessage));
+            return;
+        }
+
+        switch (args[0].toLowerCase()) {
+            case "enable":
+                enableTFA(player);
+                break;
+            case "disable":
+                disableTFA(player);
+                break;
+            case "logout":
+                logout(player);
+                break;
+            case "activate":
+                if (args.length == 2) {
+                    activate(player, args[1]);
+                } else {
+                    player.sendMessage(new TextComponent(missingCode));
+                }
+                break;
+            default:
+                player.sendMessage(new TextComponent(helpMessage));
         }
     }
 

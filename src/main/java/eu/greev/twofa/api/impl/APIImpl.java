@@ -4,7 +4,6 @@ import eu.greev.twofa.api.API;
 import eu.greev.twofa.entities.Spieler;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.MySQLMethods;
-import net.md_5.bungee.api.ProxyServer;
 
 import java.util.UUID;
 
@@ -27,7 +26,9 @@ public class APIImpl implements API {
 
     @Override
     public AuthState getAuthStateOfPlayer(UUID uuid) {
-        return Spieler.get(ProxyServer.getInstance().getPlayer(uuid).getUniqueId()).getAuthState();
+        Spieler spieler = Spieler.get(uuid);
+        if (spieler == null) return null;
+        return spieler.getAuthState();
     }
 
 }
