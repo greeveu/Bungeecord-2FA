@@ -16,7 +16,7 @@ public class MySQLMethods {
     private static final MySQL mySQL = TwoFactorAuth.getInstance().getMySQL();
 
     public static void createTable() {
-        try (PreparedStatement ps = mySQL.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `mc_proxy`.`2fa_players`(`uuid` VARCHAR(64) NOT NULL, `secret` VARCHAR(16) NOT NULL, `last_ip` VARCHAR(64) NOT NULL, `status` VARCHAR(16) NOT NULL, PRIMARY KEY (`uuid`)) ENGINE = InnoDB;")) {
+        try (PreparedStatement ps = mySQL.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_players`(`uuid` VARCHAR(64) NOT NULL, `secret` VARCHAR(16) NOT NULL, `last_ip` VARCHAR(64) NOT NULL, `status` VARCHAR(16) NOT NULL, PRIMARY KEY (`uuid`)) ENGINE = InnoDB;")) {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();

@@ -42,15 +42,19 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        if (spieler.getAuthState() == AuthState.NOT_ENABLED || spieler.getAuthState() == AuthState.AUTHENTICATED) {
-            return;
+        switch (spieler.getAuthState()) {
+            case NOT_ENABLED:
+            case AUTHENTICATED:
+                //In case its not enabled or the player is already authenticated return and dont prevent anything.
+                return;
+            case FORCED_ENABLE:
+                player.sendMessage(new TextComponent(forceenable));
+                break;
+            case WAITING_FOR_AUTH:
+                player.sendMessage(new TextComponent(waitingForAuthCode));
+                break;
         }
 
-        if (spieler.getAuthState() == AuthState.FORCED_ENABLE) { //TODO: Eww, format this if else
-            player.sendMessage(new TextComponent(forceenable));
-        } else {
-            player.sendMessage(new TextComponent(waitingForAuthCode));
-        }
         event.setCancelled(true);
     }
 
@@ -60,12 +64,7 @@ public class ServerSwitchListener implements Listener {
 
             //Remove the player if he hasnt 2fa enabled
             if (!has2faEnables) {
-                if (player.hasPermission("2fa.forceenable")) { //TODO: Eww, format this if else
-                    spieler.setAuthState(AuthState.FORCED_ENABLE);
-                } else {
-                    spieler.setAuthState(AuthState.NOT_ENABLED);
-                }
-
+                spieler.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
                 return;
             }
 
@@ -74,22 +73,16 @@ public class ServerSwitchListener implements Listener {
             Optional<String> secret = MySQLMethods.getSecret(uuid);
             TwoFactorState twoFactorState = MySQLMethods.getState(uuid);
 
-            secret.ifPresent(spieler::setSecret);
-            spieler.setTwoFactorState(twoFactorState);
-
             if (!lastHashedIp.isPresent()) {
                 return;
             }
 
+            secret.ifPresent(spieler::setSecret);
+            spieler.setTwoFactorState(twoFactorState);
+
             if (spieler.getTwoFactorState() == TwoFactorState.ACTIVATED) {
                 player.sendMessage(new TextComponent(needToActivate));
-
-                if (player.hasPermission("2fa.forceenable")) { //TODO: Eww, format this if else
-                    spieler.setAuthState(AuthState.FORCED_ENABLE);
-                } else {
-                    spieler.setAuthState(AuthState.NOT_ENABLED);
-                }
-
+                spieler.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
                 return;
             }
 
