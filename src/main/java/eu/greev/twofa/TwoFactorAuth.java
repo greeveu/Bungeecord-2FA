@@ -2,7 +2,6 @@ package eu.greev.twofa;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import com.zaxxer.hikari.pool.HikariPool;
 import eu.greev.twofa.api.API;
 import eu.greev.twofa.api.impl.APIImpl;
 import eu.greev.twofa.commands.TwoFACommand;
@@ -10,7 +9,6 @@ import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
 import eu.greev.twofa.utils.ConfigUtils;
-import eu.greev.twofa.utils.MySQL;
 import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
 import lombok.Getter;
