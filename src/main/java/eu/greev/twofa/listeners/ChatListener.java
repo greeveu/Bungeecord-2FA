@@ -9,7 +9,6 @@ import eu.greev.twofa.entities.User;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
 import eu.greev.twofa.utils.TwoFactorState;
-import io.netty.util.internal.StringUtil;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -72,7 +71,7 @@ public class ChatListener implements Listener {
         if (message.length() == 6) {
             verifyTotpCode(player, user, message);
         } else if (twoFactorAuth.getYubicoClient() != null &&
-                !StringUtil.isNullOrEmpty(user.getUserData().getYubiOtp()) &&
+                !user.getUserData().getYubiOtp().isEmpty() &&
                 YubicoClient.isValidOTPFormat(message)) {
             verifyYubiOtp(player, user, message);
         } else {
@@ -83,8 +82,9 @@ public class ChatListener implements Listener {
     private void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
         try {
             VerificationResponse response = twoFactorAuth.getYubicoClient().verify(message);
+            String publicId = YubicoClient.getPublicId(message);
 
-            if (response.isOk() && YubicoClient.getPublicId(message).equals(user.getUserData().getYubiOtp())) {
+            if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getPublicKey().equals(publicId))) {
                 saveUserAsAuthenticated(player, user);
             } else {
                 player.sendMessage(new TextComponent(yubicoCodeInvalid));

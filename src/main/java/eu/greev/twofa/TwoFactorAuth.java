@@ -78,7 +78,7 @@ public final class TwoFactorAuth extends Plugin {
 
         twoFaDao = new TwoFaDaoImpl(hikariDataSource);
 
-        twoFaDao.createTable();
+        twoFaDao.createTables();
     }
 
     private void registerEvents() {

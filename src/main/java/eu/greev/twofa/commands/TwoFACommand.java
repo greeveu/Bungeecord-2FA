@@ -6,6 +6,7 @@ import com.yubico.client.v2.exceptions.YubicoValidationFailure;
 import com.yubico.client.v2.exceptions.YubicoVerificationException;
 import eu.greev.twofa.TwoFactorAuth;
 import eu.greev.twofa.entities.User;
+import eu.greev.twofa.entities.YubicoOtp;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
@@ -94,12 +95,22 @@ public class TwoFACommand extends Command {
             case "logout":
                 logout(player);
                 break;
-            case "enableYubico":
-                if (args.length == 2) {
-                    enableYubico(player, args[1]);
+            case "addyubico":
+                if (args.length == 3 && args[1].length() <= 24) {
+                    enableYubico(player, args[1], args[2]);
                 } else {
-                    player.sendMessage(new TextComponent(missingCode));
+                    player.sendMessage(new TextComponent("Wrong command usage 1"));
                 }
+                break;
+            case "removeyubico":
+                if (args.length == 2 && args[1].length() <= 24) {
+                    removeYubico(player, args[1]);
+                } else {
+                    player.sendMessage(new TextComponent("Wrong command usage 2"));
+                }
+                break;
+            case "listyubico":
+                listYubico(player);
                 break;
             case "activate":
                 if (args.length == 2) {
@@ -113,16 +124,36 @@ public class TwoFACommand extends Command {
         }
     }
 
-    private void enableYubico(ProxiedPlayer player, String otp) {
+    private void listYubico(ProxiedPlayer player) {
+        User user = User.get(player.getUniqueId());
+
+        user.getUserData().getYubiOtp().forEach(yubicoOtp -> player.sendMessage(new TextComponent(yubicoOtp.getName() + " (" + yubicoOtp.getPublicKey() + ")")));
+    }
+
+    private void removeYubico(ProxiedPlayer player, String name) {
+        User user = User.get(player.getUniqueId());
+
+        if (user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getName().equals(name))) {
+            ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
+                user.getUserData().getYubiOtp().removeIf(yubicoOtp -> yubicoOtp.getName().equals(name));
+                twoFactorAuth.getTwoFaDao().saveUserData(player.getUniqueId().toString(), user.getUserData());
+                player.sendMessage(new TextComponent("Removed yubikey"));
+            });
+        } else {
+            player.sendMessage(new TextComponent("No yubikey with that name found"));
+        }
+    }
+
+    private void enableYubico(ProxiedPlayer player, String yubiName, String otp) {
         String uuid = player.getUniqueId().toString();
         User user = User.get(player.getUniqueId());
 
-        ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
-            if (user.getUserData().getStatus() != TwoFactorState.ACTIVE || user.getAuthState() != AuthState.AUTHENTICATED) {
-                player.sendMessage(new TextComponent(yubicoEnabletotp));
-                return;
-            }
+        if (user.getUserData().getStatus() != TwoFactorState.ACTIVE || user.getAuthState() != AuthState.AUTHENTICATED) {
+            player.sendMessage(new TextComponent(yubicoEnabletotp));
+            return;
+        }
 
+        ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
             try {
                 VerificationResponse verify = twoFactorAuth.getYubicoClient().verify(otp);
 
@@ -135,11 +166,12 @@ public class TwoFACommand extends Command {
 
                 player.sendMessage(new TextComponent(yubicoActivated));
 
-                user.getUserData().setYubiOtp(publicId);
+                user.getUserData().getYubiOtp().add(new YubicoOtp(publicId, yubiName));
 
                 twoFactorAuth.getTwoFaDao().saveUserData(uuid, user.getUserData());
             } catch (YubicoVerificationException | YubicoValidationFailure e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
+                player.sendMessage(new TextComponent(errorOccurred));
             }
         });
     }

@@ -3,11 +3,13 @@ package eu.greev.twofa.dao.impl;
 import com.zaxxer.hikari.HikariDataSource;
 import eu.greev.twofa.dao.TwoFaDao;
 import eu.greev.twofa.entities.UserData;
+import eu.greev.twofa.entities.YubicoOtp;
 import eu.greev.twofa.utils.TwoFactorState;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class TwoFaDaoImpl implements TwoFaDao {
 
@@ -18,16 +20,26 @@ public class TwoFaDaoImpl implements TwoFaDao {
     }
 
     @Override
-    public void createTable() {
+    public void createTables() {
         try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_players`\n" +
                 "(\n" +
-                "    `uuid`    VARCHAR(64) NOT NULL,\n" +
-                "    `secret`  VARCHAR(16) NOT NULL,\n" +
-                "    `yubiotp` VARCHAR(16) NOT NULL,\n" +
-                "    `last_ip` VARCHAR(64) NOT NULL,\n" +
-                "    `status`  VARCHAR(16) NOT NULL,\n" +
+                "    `uuid`    varchar(64) NOT NULL,\n" +
+                "    `secret`  varchar(16) NOT NULL,\n" +
+                "    `last_ip` varchar(64) NOT NULL,\n" +
+                "    `status`  varchar(16) NOT NULL,\n" +
                 "    PRIMARY KEY (`uuid`)\n" +
-                ") ENGINE = InnoDB;")) {
+                ") ENGINE = InnoDB\n" +
+                "  DEFAULT CHARSET = utf8mb4;\n" +
+                "\n" +
+                "\n" +
+                "CREATE TABLE IF NOT EXISTS `2fa_yubikey`\n" +
+                "(\n" +
+                "    `uuid`     varchar(36) NOT NULL,\n" +
+                "    `public_id` varchar(16) NOT NULL,\n" +
+                "    `name`     varchar(24) NOT NULL,\n" +
+                "    PRIMARY KEY (`uuid`, `public_id`)\n" +
+                ") ENGINE = InnoDB\n" +
+                "  DEFAULT CHARSET = utf8mb4;")) {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -36,21 +48,35 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public UserData loadUserData(String uuid) {
-        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("SELECT `secret`, `last_ip`, `status`, `yubiotp`\n" +
+        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("SELECT `secret`, `last_ip`, `status`, `public_id`, `name`\n" +
                 "FROM `2fa_players`\n" +
-                "WHERE uuid = ?")) {
+                "         LEFT JOIN `2fa_yubikey` ON `2fa_players`.uuid = `2fa_yubikey`.uuid\n" +
+                "WHERE `2fa_players`.uuid = ?")) {
             ps.setString(1, uuid);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet resultSet = ps.executeQuery();
 
-            if (rs.next()) {
-                UserData userData = new UserData();
-                userData.setSecret(rs.getString("secret"));
-                userData.setLastIpHash(rs.getString("last_ip"));
-                userData.setStatus(TwoFactorState.valueOf(rs.getString("status")));
-                userData.setYubiOtp(rs.getString("yubiotp"));
-                return userData;
+            UserData userData = new UserData();
+
+            if (resultSet.next()) {
+                userData.setSecret(resultSet.getString("secret"));
+                userData.setLastIpHash(resultSet.getString("last_ip"));
+                userData.setStatus(TwoFactorState.valueOf(resultSet.getString("status")));
+            } else {
+                return null;
             }
+
+            resultSet.beforeFirst();
+
+            while (resultSet.next()) {
+                //Should the public_id ever be null (meaning it's not set / the user has no YubiKeys active) just return and give out the user without YubiKeys
+                if (resultSet.getString("public_id") == null) {
+                    return userData;
+                }
+                userData.getYubiOtp().add(new YubicoOtp(resultSet.getString("public_id"), resultSet.getString("name")));
+            }
+
+            return userData;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -60,22 +86,22 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public void saveUserData(String uuid, UserData user) {
-        try (PreparedStatement preparedStatement = hikariDataSource.getConnection().prepareStatement("INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`, `status`, `yubiotp`)\n" +
-                "VALUES (?, ?, ?, ?, ?)\n" +
+        try (PreparedStatement preparedStatement = hikariDataSource.getConnection().prepareStatement("INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`, `status`)\n" +
+                "VALUES (?, ?, ?, ?)\n" +
                 "ON DUPLICATE KEY UPDATE `secret`  = values(secret),\n" +
                 "                        `last_ip` = values(`last_ip`),\n" +
-                "                        `status`  = values(`status`),\n" +
-                "                        `yubiotp` = values(`yubiotp`);")) {
+                "                        `status`  = values(`status`);")) {
             preparedStatement.setString(1, uuid);
             preparedStatement.setString(2, user.getSecret());
             preparedStatement.setString(3, user.getLastIpHash());
             preparedStatement.setString(4, user.getStatus().toString());
-            preparedStatement.setString(5, user.getYubiOtp());
 
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
+        saveYubikeys(uuid, user.getYubiOtp());
     }
 
     @Override
@@ -86,6 +112,36 @@ public class TwoFaDaoImpl implements TwoFaDao {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void saveYubikeys(String uuid, Set<YubicoOtp> yubicoOtps) {
+        if (yubicoOtps.isEmpty()) {
+            return;
+        }
+
+        try (PreparedStatement statement = hikariDataSource.getConnection().prepareStatement("INSERT INTO `2fa_yubikey`(`uuid`, `public_id`, `name`)\n" +
+                "VALUES (?, ?, ?)\n" +
+                "ON DUPLICATE KEY UPDATE `uuid`  = values(uuid),\n" +
+                "                        `public_id` = values(`public_id`),\n" +
+                "                        `name`  = values(`name`);");
+        ) {
+            int i = 0;
+
+            for (YubicoOtp entity : yubicoOtps) {
+                statement.setString(1, uuid);
+                statement.setString(2, entity.getPublicKey());
+                statement.setString(3, entity.getName());
+
+                statement.addBatch();
+                i++;
+
+                if (i % 100 == 0 || i == yubicoOtps.size()) {
+                    statement.executeBatch();
+                }
+            }
+        } catch (SQLException exception) {
+            exception.printStackTrace();
         }
     }
 }

@@ -4,7 +4,7 @@ import eu.greev.twofa.entities.UserData;
 
 public interface TwoFaDao {
 
-    void createTable();
+    void createTables();
 
     UserData loadUserData(String uuid);
 
