@@ -27,7 +27,7 @@ public class ChatListener implements Listener {
     private final String errorOccurred;
     private final String loginSuccessful;
     private final String codeIsInvalid;
-    private final String yubicoCodeIsInvalid;
+    private final String yubicoCodeInvalid;
     private final String forceenable;
 
     private final TwoFactorAuth twoFactorAuth;
@@ -39,7 +39,7 @@ public class ChatListener implements Listener {
         errorOccurred = twoFactorAuth.getConfig().getString("messages.errorocurred").replace("&", "§");
         loginSuccessful = twoFactorAuth.getConfig().getString("messages.loginsuccessful").replace("&", "§");
         codeIsInvalid = twoFactorAuth.getConfig().getString("messages.codeisinvalid").replace("&", "§");
-        yubicoCodeIsInvalid = twoFactorAuth.getConfig().getString("messages.yubicocodeisinvalid").replace("&", "§");
+        yubicoCodeInvalid = twoFactorAuth.getConfig().getString("messages.invalidcode").replace("&", "§");
         forceenable = twoFactorAuth.getConfig().getString("messages.forceenable").replace("&", "§");
     }
 
@@ -87,7 +87,7 @@ public class ChatListener implements Listener {
             if (response.isOk() && YubicoClient.getPublicId(message).equals(user.getUserData().getYubiOtp())) {
                 saveUserAsAuthenticated(player, user);
             } else {
-                player.sendMessage(new TextComponent(yubicoCodeIsInvalid));
+                player.sendMessage(new TextComponent(yubicoCodeInvalid));
             }
         } catch (YubicoVerificationException | YubicoValidationFailure e) {
             e.printStackTrace();

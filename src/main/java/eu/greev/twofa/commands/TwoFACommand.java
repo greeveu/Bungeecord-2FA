@@ -36,6 +36,10 @@ public class TwoFACommand extends Command {
     private final String successfulActivated;
     private final String hoverText;
     private final String disableforforced;
+    private final String yubicoMissingotp;
+    private final String yubicoEnabletotp;
+    private final String yubicoActivated;
+    private final String yubicoCodeInvalid;
 
     private final TwoFactorAuth twoFactorAuth;
 
@@ -57,6 +61,10 @@ public class TwoFACommand extends Command {
         successfulActivated = twoFactorAuth.getConfig().getString("messages.successfulcctivated").replace("&", "§");
         hoverText = twoFactorAuth.getConfig().getString("messages.hovertext").replace("&", "§");
         disableforforced = twoFactorAuth.getConfig().getString("messages.disableforforced").replace("&", "§");
+        yubicoCodeInvalid = twoFactorAuth.getConfig().getString("messages.activated").replace("&", "§");
+        yubicoActivated = twoFactorAuth.getConfig().getString("messages.invalidcode").replace("&", "§");
+        yubicoEnabletotp = twoFactorAuth.getConfig().getString("messages.enabletotp").replace("&", "§");
+        yubicoMissingotp = twoFactorAuth.getConfig().getString("messages.missingotp").replace("&", "§");
     }
 
     @Override
@@ -90,7 +98,7 @@ public class TwoFACommand extends Command {
                 if (args.length == 2) {
                     enableYubico(player, args[1]);
                 } else {
-                    player.sendMessage(new TextComponent("Missing Yubico OTP Code"));
+                    player.sendMessage(new TextComponent(missingCode));
                 }
                 break;
             case "activate":
@@ -111,7 +119,7 @@ public class TwoFACommand extends Command {
 
         ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
             if (user.getUserData().getStatus() != TwoFactorState.ACTIVE || user.getAuthState() != AuthState.AUTHENTICATED) {
-                player.sendMessage(new TextComponent("You need to enable totp first before adding a yubikey"));
+                player.sendMessage(new TextComponent(yubicoEnabletotp));
                 return;
             }
 
@@ -119,13 +127,13 @@ public class TwoFACommand extends Command {
                 VerificationResponse verify = twoFactorAuth.getYubicoClient().verify(otp);
 
                 if (!verify.isOk()) {
-                    player.sendMessage(new TextComponent("Yubico Otp invalid"));
+                    player.sendMessage(new TextComponent(yubicoCodeInvalid));
                     return;
                 }
 
                 String publicId = YubicoClient.getPublicId(otp);
 
-                player.sendMessage(new TextComponent("Yubico Otp activated"));
+                player.sendMessage(new TextComponent(yubicoActivated));
 
                 user.getUserData().setYubiOtp(publicId);
 
