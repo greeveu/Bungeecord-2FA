@@ -76,6 +76,8 @@ public class ServerSwitchListener implements Listener {
                 return;
             }
 
+            user.setUserData(userData);
+
             if (userData.getLastIpHash() == null || userData.getLastIpHash().isEmpty()) {
                 return;
             }

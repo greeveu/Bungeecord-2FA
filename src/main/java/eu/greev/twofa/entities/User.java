@@ -36,4 +36,13 @@ public class User {
     public static void remove(UUID uuid) {
         SPIELER_MAP.remove(uuid);
     }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "player=" + player +
+                ", authState=" + authState +
+                ", userData=" + userData +
+                '}';
+    }
 }

@@ -6,6 +6,7 @@ import eu.greev.twofa.entities.UserData;
 import eu.greev.twofa.entities.YubicoOtp;
 import eu.greev.twofa.utils.TwoFactorState;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,15 +30,18 @@ public class TwoFaDaoImpl implements TwoFaDao {
                 "    `status`  varchar(16) NOT NULL,\n" +
                 "    PRIMARY KEY (`uuid`)\n" +
                 ") ENGINE = InnoDB\n" +
-                "  DEFAULT CHARSET = utf8mb4;\n" +
-                "\n" +
-                "\n" +
-                "CREATE TABLE IF NOT EXISTS `2fa_yubikey`\n" +
+                "  DEFAULT CHARSET = utf8mb4;")) {
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_yubikey`\n" +
                 "(\n" +
-                "    `uuid`     varchar(36) NOT NULL,\n" +
+                "    `uuid`      varchar(36) NOT NULL,\n" +
                 "    `public_id` varchar(16) NOT NULL,\n" +
-                "    `name`     varchar(24) NOT NULL,\n" +
-                "    PRIMARY KEY (`uuid`, `public_id`)\n" +
+                "    `name`      varchar(24) NOT NULL,\n" +
+                "    PRIMARY KEY (`uuid`, `public_" +
+                "id`)\n" +
                 ") ENGINE = InnoDB\n" +
                 "  DEFAULT CHARSET = utf8mb4;")) {
             ps.executeUpdate();
@@ -48,10 +52,11 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public UserData loadUserData(String uuid) {
-        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("SELECT `secret`, `last_ip`, `status`, `public_id`, `name`\n" +
-                "FROM `2fa_players`\n" +
-                "         LEFT JOIN `2fa_yubikey` ON `2fa_players`.uuid = `2fa_yubikey`.uuid\n" +
-                "WHERE `2fa_players`.uuid = ?")) {
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement("SELECT `secret`, `last_ip`, `status`, `public_id`, `name`\n" +
+                     "FROM `2fa_players`\n" +
+                     "         LEFT JOIN `2fa_yubikey` ON `2fa_players`.uuid = `2fa_yubikey`.uuid\n" +
+                     "WHERE `2fa_players`.uuid = ?", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE)) {
             ps.setString(1, uuid);
 
             ResultSet resultSet = ps.executeQuery();
@@ -73,7 +78,7 @@ public class TwoFaDaoImpl implements TwoFaDao {
                 if (resultSet.getString("public_id") == null) {
                     return userData;
                 }
-                userData.getYubiOtp().add(new YubicoOtp(resultSet.getString("public_id"), resultSet.getString("name")));
+                userData.getYubiOtp().add(new YubicoOtp(resultSet.getString("name"), resultSet.getString("public_id")));
             }
 
             return userData;
@@ -130,7 +135,7 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
             for (YubicoOtp entity : yubicoOtps) {
                 statement.setString(1, uuid);
-                statement.setString(2, entity.getPublicKey());
+                statement.setString(2, entity.getPublicId());
                 statement.setString(3, entity.getName());
 
                 statement.addBatch();

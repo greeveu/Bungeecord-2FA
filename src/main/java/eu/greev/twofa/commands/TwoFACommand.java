@@ -37,10 +37,18 @@ public class TwoFACommand extends Command {
     private final String successfulActivated;
     private final String hoverText;
     private final String disableforforced;
-    private final String yubicoMissingotp;
-    private final String yubicoEnabletotp;
-    private final String yubicoActivated;
-    private final String yubicoCodeInvalid;
+    private final String yubikeyEnabletotp;
+    private final String yubikeyActivated;
+    private final String yubikeyCodeInvalid;
+    private final String yubikeyAddyubiusage;
+    private final String yubikeyRemoveyubiusage;
+    private final String yubikeyDisabled;
+    private final String yubikeyRemovedkey;
+    private final String yubikeyRemovedkeynotfound;
+    private final String yubikeyKeysinaccount;
+    private final String yubikeyKeylist;
+    private final String yubikeyNokeysinaccount;
+
 
     private final TwoFactorAuth twoFactorAuth;
 
@@ -62,10 +70,17 @@ public class TwoFACommand extends Command {
         successfulActivated = twoFactorAuth.getConfig().getString("messages.successfulcctivated").replace("&", "§");
         hoverText = twoFactorAuth.getConfig().getString("messages.hovertext").replace("&", "§");
         disableforforced = twoFactorAuth.getConfig().getString("messages.disableforforced").replace("&", "§");
-        yubicoCodeInvalid = twoFactorAuth.getConfig().getString("messages.activated").replace("&", "§");
-        yubicoActivated = twoFactorAuth.getConfig().getString("messages.invalidcode").replace("&", "§");
-        yubicoEnabletotp = twoFactorAuth.getConfig().getString("messages.enabletotp").replace("&", "§");
-        yubicoMissingotp = twoFactorAuth.getConfig().getString("messages.missingotp").replace("&", "§");
+        yubikeyCodeInvalid = twoFactorAuth.getConfig().getString("messages.yubikey.invalidcode").replace("&", "§");
+        yubikeyActivated = twoFactorAuth.getConfig().getString("messages.yubikey.activated").replace("&", "§");
+        yubikeyEnabletotp = twoFactorAuth.getConfig().getString("messages.yubikey.enabletotp").replace("&", "§");
+        yubikeyAddyubiusage = twoFactorAuth.getConfig().getString("messages.yubikey.addyubiusage").replace("&", "§");
+        yubikeyRemoveyubiusage = twoFactorAuth.getConfig().getString("messages.yubikey.removeyubiusage").replace("&", "§");
+        yubikeyDisabled = twoFactorAuth.getConfig().getString("messages.yubikey.disabled").replace("&", "§");
+        yubikeyRemovedkey = twoFactorAuth.getConfig().getString("messages.yubikey.removedkey").replace("&", "§");
+        yubikeyRemovedkeynotfound = twoFactorAuth.getConfig().getString("messages.yubikey.removedkeynotfound").replace("&", "§");
+        yubikeyKeysinaccount = twoFactorAuth.getConfig().getString("messages.yubikey.keysinaccount").replace("&", "§");
+        yubikeyKeylist = twoFactorAuth.getConfig().getString("messages.yubikey.keylist").replace("&", "§");
+        yubikeyNokeysinaccount = twoFactorAuth.getConfig().getString("messages.yubikey.nokeysinaccount").replace("&", "§");
     }
 
     @Override
@@ -95,21 +110,21 @@ public class TwoFACommand extends Command {
             case "logout":
                 logout(player);
                 break;
-            case "addyubico":
+            case "addyubikey":
                 if (args.length == 3 && args[1].length() <= 24) {
                     enableYubico(player, args[1], args[2]);
                 } else {
-                    player.sendMessage(new TextComponent("Wrong command usage 1"));
+                    player.sendMessage(new TextComponent(yubikeyAddyubiusage)); //missingotp
                 }
                 break;
-            case "removeyubico":
+            case "removeyubikey":
                 if (args.length == 2 && args[1].length() <= 24) {
                     removeYubico(player, args[1]);
                 } else {
-                    player.sendMessage(new TextComponent("Wrong command usage 2"));
+                    player.sendMessage(new TextComponent(yubikeyRemoveyubiusage));
                 }
                 break;
-            case "listyubico":
+            case "listyubikey":
                 listYubico(player);
                 break;
             case "activate":
@@ -125,31 +140,57 @@ public class TwoFACommand extends Command {
     }
 
     private void listYubico(ProxiedPlayer player) {
+        if (twoFactorAuth.getYubicoClient() == null) {
+            player.sendMessage(new TextComponent(yubikeyDisabled));
+            return;
+        }
+
         User user = User.get(player.getUniqueId());
 
-        user.getUserData().getYubiOtp().forEach(yubicoOtp -> player.sendMessage(new TextComponent(yubicoOtp.getName() + " (" + yubicoOtp.getPublicKey() + ")")));
+        if (user.getUserData().getYubiOtp().isEmpty()) {
+            player.sendMessage(new TextComponent(yubikeyNokeysinaccount));
+            return;
+        }
+
+        player.sendMessage(new TextComponent(yubikeyKeysinaccount));
+
+        user.getUserData().getYubiOtp().forEach(yubicoOtp -> player.sendMessage(
+                new TextComponent(yubikeyKeylist
+                        .replace("%name%", yubicoOtp.getName())
+                        .replace("%publicId%", yubicoOtp.getPublicId())))
+        );
     }
 
     private void removeYubico(ProxiedPlayer player, String name) {
+        if (twoFactorAuth.getYubicoClient() == null) {
+            player.sendMessage(new TextComponent(yubikeyDisabled));
+            return;
+        }
+
         User user = User.get(player.getUniqueId());
 
         if (user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getName().equals(name))) {
             ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
                 user.getUserData().getYubiOtp().removeIf(yubicoOtp -> yubicoOtp.getName().equals(name));
                 twoFactorAuth.getTwoFaDao().saveUserData(player.getUniqueId().toString(), user.getUserData());
-                player.sendMessage(new TextComponent("Removed yubikey"));
+                player.sendMessage(new TextComponent(yubikeyRemovedkey));
             });
         } else {
-            player.sendMessage(new TextComponent("No yubikey with that name found"));
+            player.sendMessage(new TextComponent(yubikeyRemovedkeynotfound));
         }
     }
 
     private void enableYubico(ProxiedPlayer player, String yubiName, String otp) {
+        if (twoFactorAuth.getYubicoClient() == null) {
+            player.sendMessage(new TextComponent(yubikeyDisabled));
+            return;
+        }
+
         String uuid = player.getUniqueId().toString();
         User user = User.get(player.getUniqueId());
 
         if (user.getUserData().getStatus() != TwoFactorState.ACTIVE || user.getAuthState() != AuthState.AUTHENTICATED) {
-            player.sendMessage(new TextComponent(yubicoEnabletotp));
+            player.sendMessage(new TextComponent(yubikeyEnabletotp));
             return;
         }
 
@@ -158,18 +199,18 @@ public class TwoFACommand extends Command {
                 VerificationResponse verify = twoFactorAuth.getYubicoClient().verify(otp);
 
                 if (!verify.isOk()) {
-                    player.sendMessage(new TextComponent(yubicoCodeInvalid));
+                    player.sendMessage(new TextComponent(yubikeyCodeInvalid));
                     return;
                 }
 
                 String publicId = YubicoClient.getPublicId(otp);
 
-                player.sendMessage(new TextComponent(yubicoActivated));
+                player.sendMessage(new TextComponent(yubikeyActivated));
 
-                user.getUserData().getYubiOtp().add(new YubicoOtp(publicId, yubiName));
+                user.getUserData().getYubiOtp().add(new YubicoOtp(yubiName, publicId));
 
                 twoFactorAuth.getTwoFaDao().saveUserData(uuid, user.getUserData());
-            } catch (YubicoVerificationException | YubicoValidationFailure e) {
+            } catch (YubicoVerificationException | YubicoValidationFailure | IllegalArgumentException e) {
                 e.printStackTrace();
                 player.sendMessage(new TextComponent(errorOccurred));
             }

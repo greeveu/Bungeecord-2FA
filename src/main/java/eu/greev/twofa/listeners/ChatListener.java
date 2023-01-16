@@ -28,6 +28,7 @@ public class ChatListener implements Listener {
     private final String codeIsInvalid;
     private final String yubicoCodeInvalid;
     private final String forceenable;
+    private final String dataNull;
 
     private final TwoFactorAuth twoFactorAuth;
 
@@ -40,6 +41,7 @@ public class ChatListener implements Listener {
         codeIsInvalid = twoFactorAuth.getConfig().getString("messages.codeisinvalid").replace("&", "§");
         yubicoCodeInvalid = twoFactorAuth.getConfig().getString("messages.invalidcode").replace("&", "§");
         forceenable = twoFactorAuth.getConfig().getString("messages.forceenable").replace("&", "§");
+        dataNull = twoFactorAuth.getConfig().getString("messages.datanull").replace("&", "§");
     }
 
     @EventHandler
@@ -67,6 +69,11 @@ public class ChatListener implements Listener {
             player.sendMessage(new TextComponent(forceenable));
         }
 
+        if (user.getUserData() == null) {
+            player.sendMessage(new TextComponent(dataNull));
+            return;
+        }
+
         //Verify send code
         if (message.length() == 6) {
             verifyTotpCode(player, user, message);
@@ -80,36 +87,40 @@ public class ChatListener implements Listener {
     }
 
     private void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
-        try {
-            VerificationResponse response = twoFactorAuth.getYubicoClient().verify(message);
-            String publicId = YubicoClient.getPublicId(message);
+        ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
+            try {
+                VerificationResponse response = twoFactorAuth.getYubicoClient().verify(message);
+                String publicId = YubicoClient.getPublicId(message);
 
-            if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getPublicKey().equals(publicId))) {
-                saveUserAsAuthenticated(player, user);
-            } else {
-                player.sendMessage(new TextComponent(yubicoCodeInvalid));
+                if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getPublicId().equals(publicId))) {
+                    saveUserAsAuthenticated(player, user);
+                } else {
+                    player.sendMessage(new TextComponent(yubicoCodeInvalid));
+                }
+            } catch (YubicoVerificationException | YubicoValidationFailure e) {
+                e.printStackTrace();
+                player.sendMessage(new TextComponent(errorOccurred));
             }
-        } catch (YubicoVerificationException | YubicoValidationFailure e) {
-            e.printStackTrace();
-            player.sendMessage(new TextComponent(errorOccurred));
-        }
+        });
     }
 
     private void verifyTotpCode(ProxiedPlayer player, User user, String message) {
-        try {
-            String secret = user.getUserData().getSecret();
+        ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> {
+            try {
+                String secret = user.getUserData().getSecret();
 
-            Set<String> validCodes = twoFactorAuth.getTwoFactorAuthUtil().generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
+                Set<String> validCodes = twoFactorAuth.getTwoFactorAuthUtil().generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
 
-            if (validCodes.contains(message)) {
-                saveUserAsAuthenticated(player, user);
-            } else {
-                player.sendMessage(new TextComponent(codeIsInvalid));
+                if (validCodes.contains(message)) {
+                    saveUserAsAuthenticated(player, user);
+                } else {
+                    player.sendMessage(new TextComponent(codeIsInvalid));
+                }
+            } catch (GeneralSecurityException e) {
+                e.printStackTrace();
+                player.sendMessage(new TextComponent(errorOccurred));
             }
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            player.sendMessage(new TextComponent(errorOccurred));
-        }
+        });
     }
 
     private void saveUserAsAuthenticated(ProxiedPlayer player, User user) {

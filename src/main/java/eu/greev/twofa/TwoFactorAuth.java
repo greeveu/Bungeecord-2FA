@@ -23,7 +23,7 @@ import java.io.IOException;
 public final class TwoFactorAuth extends Plugin {
 
     @Getter
-    public API twoFactorApi;
+    public static API twoFactorApi;
 
     @Getter
     private TwoFactorAuthUtil twoFactorAuthUtil;
