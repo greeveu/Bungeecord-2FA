@@ -1,17 +1,23 @@
 package eu.greev.twofa.api.impl;
 
+import eu.greev.twofa.TwoFactorAuth;
 import eu.greev.twofa.api.API;
-import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.entities.User;
 import eu.greev.twofa.utils.AuthState;
-import eu.greev.twofa.utils.MySQLMethods;
 
 import java.util.UUID;
 
 public class APIImpl implements API {
 
+    private final TwoFactorAuth twoFactorAuth;
+
+    public APIImpl(TwoFactorAuth twoFactorAuth) {
+        this.twoFactorAuth = twoFactorAuth;
+    }
+
     @Override
     public boolean hasPlayer2FAEnabled(String uuid) {
-        return MySQLMethods.hasRecord(uuid);
+        return twoFactorAuth.getTwoFaDao().loadUserData(uuid) != null;
     }
 
     @Override
@@ -26,9 +32,9 @@ public class APIImpl implements API {
 
     @Override
     public AuthState getAuthStateOfPlayer(UUID uuid) {
-        Spieler spieler = Spieler.get(uuid);
-        if (spieler == null) return null;
-        return spieler.getAuthState();
+        User user = User.get(uuid);
+        if (user == null) return null;
+        return user.getAuthState();
     }
 
 }

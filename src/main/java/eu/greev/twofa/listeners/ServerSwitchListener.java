@@ -1,10 +1,10 @@
 package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.TwoFactorAuth;
-import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.entities.User;
+import eu.greev.twofa.entities.UserData;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
-import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorState;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -13,13 +13,22 @@ import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
-import java.util.Optional;
-
 public class ServerSwitchListener implements Listener {
-    private final String waitingForAuthCode = TwoFactorAuth.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
-    private final String authEnabled = TwoFactorAuth.getInstance().getConfig().getString("messages.authenabled").replace("&", "§");
-    private final String needToActivate = TwoFactorAuth.getInstance().getConfig().getString("messages.needtoactivate").replace("&", "§");
-    private final String forceenable = TwoFactorAuth.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
+    private final String waitingForAuthCode;
+    private final String authEnabled;
+    private final String needToActivate;
+    private final String forceenable;
+
+    private final TwoFactorAuth main;
+
+    public ServerSwitchListener(TwoFactorAuth main) {
+        this.main = main;
+
+        waitingForAuthCode = main.getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+        authEnabled = main.getConfig().getString("messages.authenabled").replace("&", "§");
+        needToActivate = main.getConfig().getString("messages.needtoactivate").replace("&", "§");
+        forceenable = main.getConfig().getString("messages.forceenable").replace("&", "§");
+    }
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {
@@ -29,23 +38,22 @@ public class ServerSwitchListener implements Listener {
             return;
         }
 
-        Spieler spieler = Spieler.get(player.getUniqueId());
-        String uuid = player.getUniqueId().toString();
+        User user = User.get(player.getUniqueId());
 
-        if (spieler == null) {
-            spieler = new Spieler(player);
-            Spieler.add(spieler);
+        if (user == null) {
+            user = new User(player);
+            User.add(user);
         }
 
         if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
-            asyncDatabaseAndPlayerUpdate(player, spieler, uuid);
+            asyncDatabaseAndPlayerUpdate(player, user);
             return;
         }
 
-        switch (spieler.getAuthState()) {
+        switch (user.getAuthState()) {
             case NOT_ENABLED:
             case AUTHENTICATED:
-                //In case its not enabled or the player is already authenticated return and dont prevent anything.
+                //In case it's not enabled or the player is already authenticated return and don't prevent anything.
                 return;
             case FORCED_ENABLE:
                 player.sendMessage(new TextComponent(forceenable));
@@ -58,37 +66,29 @@ public class ServerSwitchListener implements Listener {
         event.setCancelled(true);
     }
 
-    private void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, Spieler spieler, String uuid) {
-        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
-            boolean has2faEnables = MySQLMethods.hasRecord(uuid);
+    private void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, User user) {
+        ProxyServer.getInstance().getScheduler().runAsync(main, () -> {
+            UserData userData = main.getTwoFaDao().loadUserData(player.getUniqueId().toString());
 
-            //Remove the player if he hasnt 2fa enabled
-            if (!has2faEnables) {
-                spieler.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
+            //Remove the player if he hasn't 2fa enabled
+            if (userData == null) {
+                user.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
                 return;
             }
 
-            //TODO: One database call for all of them, if thats done I can also remove the has Record call and just check if there is data.
-            Optional<String> lastHashedIp = MySQLMethods.getLastIP(uuid);
-            Optional<String> secret = MySQLMethods.getSecret(uuid);
-            TwoFactorState twoFactorState = MySQLMethods.getState(uuid);
-
-            if (!lastHashedIp.isPresent()) {
+            if (userData.getLastIpHash() == null || userData.getLastIpHash().isEmpty()) {
                 return;
             }
 
-            secret.ifPresent(spieler::setSecret);
-            spieler.setTwoFactorState(twoFactorState);
-
-            if (spieler.getTwoFactorState() == TwoFactorState.ACTIVATED) {
+            if (userData.getStatus() == TwoFactorState.ACTIVATED) {
                 player.sendMessage(new TextComponent(needToActivate));
-                spieler.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
+                user.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
                 return;
             }
 
             String hasedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
-            if (lastHashedIp.get().equals(hasedIp) && twoFactorState != TwoFactorState.LOGOUT) {
-                spieler.setAuthState(AuthState.AUTHENTICATED);
+            if (userData.getLastIpHash().equals(hasedIp) && userData.getStatus() == TwoFactorState.ACTIVE) {
+                user.setAuthState(AuthState.AUTHENTICATED);
                 return;
             }
 

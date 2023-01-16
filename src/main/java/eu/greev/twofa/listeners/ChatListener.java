@@ -1,11 +1,15 @@
 package eu.greev.twofa.listeners;
 
+import com.yubico.client.v2.VerificationResponse;
+import com.yubico.client.v2.YubicoClient;
+import com.yubico.client.v2.exceptions.YubicoValidationFailure;
+import com.yubico.client.v2.exceptions.YubicoVerificationException;
 import eu.greev.twofa.TwoFactorAuth;
-import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.entities.User;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.HashingUtils;
-import eu.greev.twofa.utils.MySQLMethods;
 import eu.greev.twofa.utils.TwoFactorState;
+import io.netty.util.internal.StringUtil;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
@@ -19,11 +23,25 @@ import java.util.Set;
 
 public class ChatListener implements Listener {
 
-    private final String waitingForAuthCode = TwoFactorAuth.getInstance().getConfig().getString("messages.waitingforauthcode").replace("&", "§");
-    private final String errorOccurred = TwoFactorAuth.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
-    private final String loginSuccessful = TwoFactorAuth.getInstance().getConfig().getString("messages.loginsuccessful").replace("&", "§");
-    private final String codeIsInvalid = TwoFactorAuth.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
-    private final String forceenable = TwoFactorAuth.getInstance().getConfig().getString("messages.forceenable").replace("&", "§");
+    private final String waitingForAuthCode;
+    private final String errorOccurred;
+    private final String loginSuccessful;
+    private final String codeIsInvalid;
+    private final String yubicoCodeIsInvalid;
+    private final String forceenable;
+
+    private final TwoFactorAuth twoFactorAuth;
+
+    public ChatListener(TwoFactorAuth twoFactorAuth) {
+        this.twoFactorAuth = twoFactorAuth;
+
+        waitingForAuthCode = twoFactorAuth.getConfig().getString("messages.waitingforauthcode").replace("&", "§");
+        errorOccurred = twoFactorAuth.getConfig().getString("messages.errorocurred").replace("&", "§");
+        loginSuccessful = twoFactorAuth.getConfig().getString("messages.loginsuccessful").replace("&", "§");
+        codeIsInvalid = twoFactorAuth.getConfig().getString("messages.codeisinvalid").replace("&", "§");
+        yubicoCodeIsInvalid = twoFactorAuth.getConfig().getString("messages.yubicocodeisinvalid").replace("&", "§");
+        forceenable = twoFactorAuth.getConfig().getString("messages.forceenable").replace("&", "§");
+    }
 
     @EventHandler
     public void onChat(ChatEvent event) {
@@ -33,52 +51,77 @@ public class ChatListener implements Listener {
             return;
         }
 
-        Spieler spieler = Spieler.get(player.getUniqueId());
-        String message = event.getMessage();
+        User user = User.get(player.getUniqueId());
 
-        if (spieler.getAuthState() == AuthState.AUTHENTICATED || spieler.getAuthState() == AuthState.NOT_ENABLED) {
+        if (user.getAuthState() == AuthState.AUTHENTICATED || user.getAuthState() == AuthState.NOT_ENABLED) {
             return;
         }
 
         event.setCancelled(true);
 
-        //If message is not a 2fa token return
-        if (message.length() != 6) {
-            if (spieler.getAuthState() == AuthState.FORCED_ENABLE) { //TODO: Eww, format this if else
-                if (message.toLowerCase().startsWith("/2fa")) {
-                    event.setCancelled(false);
-                    return;
-                }
-                player.sendMessage(new TextComponent(forceenable));
-            } else {
-                player.sendMessage(new TextComponent(waitingForAuthCode));
-            }
-            return;
-        }
-
-        try {
-            String secret = spieler.getSecret();
-
-            Set<String> validCodes = TwoFactorAuth.getInstance().getTwoFactorAuthUtil().generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
-
-            //The Code was Invalid
-            if (!validCodes.contains(message)) {
-                player.sendMessage(new TextComponent(codeIsInvalid));
+        String message = event.getMessage();
+        if (user.getAuthState() == AuthState.FORCED_ENABLE) {
+            if (message.toLowerCase().startsWith("/2fa")) {
+                event.setCancelled(false);
                 return;
             }
+            player.sendMessage(new TextComponent(forceenable));
+        }
 
-            spieler.setAuthState(AuthState.AUTHENTICATED);
-            ProxyServer.getInstance().getScheduler()
-                    .runAsync(TwoFactorAuth.getInstance(), () -> MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.ACTIVE));
+        //Verify send code
+        if (message.length() == 6) {
+            verifyTotpCode(player, user, message);
+        } else if (twoFactorAuth.getYubicoClient() != null &&
+                !StringUtil.isNullOrEmpty(user.getUserData().getYubiOtp()) &&
+                YubicoClient.isValidOTPFormat(message)) {
+            verifyYubiOtp(player, user, message);
+        } else {
+            player.sendMessage(new TextComponent(waitingForAuthCode));
+        }
+    }
 
-            player.sendMessage(new TextComponent(loginSuccessful));
+    private void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
+        try {
+            VerificationResponse response = twoFactorAuth.getYubicoClient().verify(message);
 
-            String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
-            MySQLMethods.setIP(player.getUniqueId().toString(), hashedIp);
+            if (response.isOk() && YubicoClient.getPublicId(message).equals(user.getUserData().getYubiOtp())) {
+                saveUserAsAuthenticated(player, user);
+            } else {
+                player.sendMessage(new TextComponent(yubicoCodeIsInvalid));
+            }
+        } catch (YubicoVerificationException | YubicoValidationFailure e) {
+            e.printStackTrace();
+            player.sendMessage(new TextComponent(errorOccurred));
+        }
+    }
+
+    private void verifyTotpCode(ProxiedPlayer player, User user, String message) {
+        try {
+            String secret = user.getUserData().getSecret();
+
+            Set<String> validCodes = twoFactorAuth.getTwoFactorAuthUtil().generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
+
+            if (validCodes.contains(message)) {
+                saveUserAsAuthenticated(player, user);
+            } else {
+                player.sendMessage(new TextComponent(codeIsInvalid));
+            }
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
             player.sendMessage(new TextComponent(errorOccurred));
         }
+    }
+
+    private void saveUserAsAuthenticated(ProxiedPlayer player, User user) {
+        String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
+
+        user.setAuthState(AuthState.AUTHENTICATED);
+        user.getUserData().setStatus(TwoFactorState.ACTIVE);
+        user.getUserData().setLastIpHash(hashedIp);
+
+        ProxyServer.getInstance().getScheduler().runAsync(twoFactorAuth, () -> twoFactorAuth.getTwoFaDao().saveUserData(player.getUniqueId().toString(), user.getUserData()));
+
+        player.sendMessage(new TextComponent(loginSuccessful));
     }
 
     @EventHandler
@@ -89,9 +132,9 @@ public class ChatListener implements Listener {
             return;
         }
 
-        Spieler spieler = Spieler.get(player.getUniqueId());
+        User user = User.get(player.getUniqueId());
 
-        if (spieler.getAuthState() == AuthState.WAITING_FOR_AUTH) {
+        if (user.getAuthState() == AuthState.WAITING_FOR_AUTH) {
             event.setCancelled(true);
         }
     }
