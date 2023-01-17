@@ -1,7 +1,7 @@
 package eu.greev.twofa.api.impl;
 
-import eu.greev.twofa.TwoFactorAuth;
 import eu.greev.twofa.api.API;
+import eu.greev.twofa.dao.TwoFaDao;
 import eu.greev.twofa.entities.User;
 import eu.greev.twofa.utils.AuthState;
 
@@ -9,15 +9,15 @@ import java.util.UUID;
 
 public class APIImpl implements API {
 
-    private final TwoFactorAuth twoFactorAuth;
+    private final TwoFaDao dao;
 
-    public APIImpl(TwoFactorAuth twoFactorAuth) {
-        this.twoFactorAuth = twoFactorAuth;
+    public APIImpl(TwoFaDao dao) {
+        this.dao = dao;
     }
 
     @Override
     public boolean hasPlayer2FAEnabled(String uuid) {
-        return twoFactorAuth.getTwoFaDao().loadUserData(uuid) != null;
+        return dao.loadUserData(uuid) != null;
     }
 
     @Override

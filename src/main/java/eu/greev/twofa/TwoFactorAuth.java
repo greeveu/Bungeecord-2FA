@@ -11,7 +11,9 @@ import eu.greev.twofa.dao.impl.TwoFaDaoImpl;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
+import eu.greev.twofa.service.TwoFaService;
 import eu.greev.twofa.utils.ConfigUtils;
+import eu.greev.twofa.utils.Language;
 import eu.greev.twofa.utils.TwoFactorAuthUtil;
 import lombok.Getter;
 import net.md_5.bungee.api.ProxyServer;
@@ -26,21 +28,14 @@ public final class TwoFactorAuth extends Plugin {
     public static API twoFactorApi;
 
     @Getter
-    private TwoFactorAuthUtil twoFactorAuthUtil;
+    private TwoFaService twoFaService;
 
-    @Getter
-    private YubicoClient yubicoClient;
-
-    @Getter
-    private Configuration config;
-
-    @Getter
     private TwoFaDao twoFaDao;
-
+    private Configuration config;
+    private TwoFactorAuthUtil twoFactorAuthUtil;
     private HikariDataSource hikariDataSource;
-
-    @Getter
-    private static final int MILLISECOND_TIMING_THRESHOLD = 30000;
+    private YubicoClient yubicoClient;
+    private Language language;
 
     @Override
     public void onEnable() {
@@ -51,15 +46,16 @@ public final class TwoFactorAuth extends Plugin {
             return;
         }
 
-        twoFactorAuthUtil = new TwoFactorAuthUtil();
+        language = new Language(config);
+
+        loadDatabase();
 
         if (config.getBoolean("yubico.enabled", false)) {
             yubicoClient = YubicoClient.getClient(config.getInt("yubico.clientId"), config.getString("yubico.secretKey"));
         }
-
-        twoFactorApi = new APIImpl(this);
-
-        loadDatabase();
+        twoFactorAuthUtil = new TwoFactorAuthUtil();
+        twoFactorApi = new APIImpl(twoFaDao);
+        twoFaService = new TwoFaService(this, twoFaDao, yubicoClient, twoFactorAuthUtil, language);
 
         this.registerCommands();
         this.registerEvents();
@@ -82,13 +78,13 @@ public final class TwoFactorAuth extends Plugin {
     }
 
     private void registerEvents() {
-        ProxyServer.getInstance().getPluginManager().registerListener(this, new ChatListener(this));
+        ProxyServer.getInstance().getPluginManager().registerListener(this, new ChatListener(twoFaService, language));
         ProxyServer.getInstance().getPluginManager().registerListener(this, new QuitListener());
-        ProxyServer.getInstance().getPluginManager().registerListener(this, new ServerSwitchListener(this));
+        ProxyServer.getInstance().getPluginManager().registerListener(this, new ServerSwitchListener(twoFaService, language));
     }
 
     private void registerCommands() {
-        ProxyServer.getInstance().getPluginManager().registerCommand(this, new TwoFACommand(this));
+        ProxyServer.getInstance().getPluginManager().registerCommand(this, new TwoFACommand(twoFaService, language));
     }
 
     @Override
