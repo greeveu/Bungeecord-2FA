@@ -3,21 +3,17 @@ package eu.greev.twofa.listeners;
 import eu.greev.twofa.entities.User;
 import eu.greev.twofa.service.TwoFaService;
 import eu.greev.twofa.utils.Language;
+import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
+@RequiredArgsConstructor
 public class ServerSwitchListener implements Listener {
-
     private final TwoFaService service;
     private final Language language;
-
-    public ServerSwitchListener(TwoFaService service, Language language) {
-        this.service = service;
-        this.language = language;
-    }
 
     @EventHandler
     public void onSwitch(ServerConnectEvent event) {

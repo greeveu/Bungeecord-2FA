@@ -10,6 +10,7 @@ import eu.greev.twofa.entities.User;
 import eu.greev.twofa.entities.UserData;
 import eu.greev.twofa.entities.YubicoOtp;
 import eu.greev.twofa.utils.*;
+import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.ProxyServer;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -20,21 +21,13 @@ import net.md_5.bungee.api.connection.ProxiedPlayer;
 import java.security.GeneralSecurityException;
 import java.util.Set;
 
+@RequiredArgsConstructor
 public class TwoFaService {
-
     private final TwoFactorAuth main;
     private final TwoFaDao database;
     private final YubicoClient yubicoClient;
     private final TwoFactorAuthUtil twoFactorAuthUtil;
     private final Language language;
-
-    public TwoFaService(TwoFactorAuth main, TwoFaDao database, YubicoClient yubicoClient, TwoFactorAuthUtil twoFactorAuthUtil, Language language) {
-        this.main = main;
-        this.database = database;
-        this.yubicoClient = yubicoClient;
-        this.twoFactorAuthUtil = twoFactorAuthUtil;
-        this.language = language;
-    }
 
     public void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
         ProxyServer.getInstance().getScheduler().runAsync(main, () -> {

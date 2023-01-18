@@ -63,6 +63,8 @@ public class TwoFACommand extends Command implements TabExecutor {
             case "yubikey":
                 if (args.length >= 2) {
                     findYubiKeySubCommand(args, player);
+                } else {
+                    player.sendMessage(new TextComponent(language.getMissingCode()));
                 }
                 break;
             case "activate":

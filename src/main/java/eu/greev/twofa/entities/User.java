@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @RequiredArgsConstructor
 public class User {
-    private static final Map<UUID, User> SPIELER_MAP = new HashMap<>();
+    private static final Map<UUID, User> USER_MAP = new HashMap<>();
 
     @Getter
     private final ProxiedPlayer player;
@@ -26,23 +26,14 @@ public class User {
     private UserData userData;
 
     public static User get(UUID uuid) {
-        return SPIELER_MAP.get(uuid);
+        return USER_MAP.get(uuid);
     }
 
     public static void add(User user) {
-        SPIELER_MAP.put(user.getPlayer().getUniqueId(), user);
+        USER_MAP.put(user.getPlayer().getUniqueId(), user);
     }
 
     public static void remove(UUID uuid) {
-        SPIELER_MAP.remove(uuid);
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "player=" + player +
-                ", authState=" + authState +
-                ", userData=" + userData +
-                '}';
+        USER_MAP.remove(uuid);
     }
 }

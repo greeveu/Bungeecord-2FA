@@ -29,12 +29,12 @@ public class Language {
     private final String missingCode;
     private final String yubikeyAddyubiusage;
     private final String yubikeyRemoveyubiusage;
+    private final String yubikeySubcommands;
     private final String waitingForAuthCode;
     private final String authEnabled;
     private final String needToActivate;
     private final String forceenable;
     private final String loginSuccessful;
-    private final String yubicoCodeInvalid;
     private final String dataNull;
 
     public Language(Configuration configuration) {
@@ -56,6 +56,7 @@ public class Language {
         yubikeyEnabletotp = configuration.getString("messages.yubikey.enabletotp").replace("&", "§");
         yubikeyAddyubiusage = configuration.getString("messages.yubikey.addyubiusage").replace("&", "§");
         yubikeyRemoveyubiusage = configuration.getString("messages.yubikey.removeyubiusage").replace("&", "§");
+        yubikeySubcommands = configuration.getString("messages.yubikey.subcommands").replace("&", "§");
         yubikeyDisabled = configuration.getString("messages.yubikey.disabled").replace("&", "§");
         yubikeyRemovedkey = configuration.getString("messages.yubikey.removedkey").replace("&", "§");
         yubikeyRemovedkeynotfound = configuration.getString("messages.yubikey.removedkeynotfound").replace("&", "§");
@@ -67,7 +68,6 @@ public class Language {
         needToActivate = configuration.getString("messages.needtoactivate").replace("&", "§");
         forceenable = configuration.getString("messages.forceenable").replace("&", "§");
         loginSuccessful = configuration.getString("messages.loginsuccessful").replace("&", "§");
-        yubicoCodeInvalid = configuration.getString("messages.invalidcode").replace("&", "§");
         dataNull = configuration.getString("messages.datanull").replace("&", "§");
     }
 }

@@ -1,5 +1,6 @@
 package eu.greev.twofa.utils;
 
+import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 import net.md_5.bungee.config.ConfigurationProvider;
@@ -10,12 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 
+@RequiredArgsConstructor
 public class ConfigUtils {
     private final Plugin plugin;
-
-    public ConfigUtils(Plugin plugin) {
-        this.plugin = plugin;
-    }
 
     /**
      * Get custom config and save default if not already exists

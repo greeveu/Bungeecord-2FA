@@ -4,16 +4,14 @@ import eu.greev.twofa.api.API;
 import eu.greev.twofa.dao.TwoFaDao;
 import eu.greev.twofa.entities.User;
 import eu.greev.twofa.utils.AuthState;
+import lombok.RequiredArgsConstructor;
 
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public class APIImpl implements API {
 
     private final TwoFaDao dao;
-
-    public APIImpl(TwoFaDao dao) {
-        this.dao = dao;
-    }
 
     @Override
     public boolean hasPlayer2FAEnabled(String uuid) {

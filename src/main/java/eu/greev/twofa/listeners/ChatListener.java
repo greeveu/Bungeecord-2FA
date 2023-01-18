@@ -4,6 +4,7 @@ import eu.greev.twofa.entities.User;
 import eu.greev.twofa.service.TwoFaService;
 import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.Language;
+import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.ChatEvent;
@@ -11,14 +12,10 @@ import net.md_5.bungee.api.event.TabCompleteEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
+@RequiredArgsConstructor
 public class ChatListener implements Listener {
     private final TwoFaService service;
     private final Language language;
-
-    public ChatListener(TwoFaService service, Language language) {
-        this.service = service;
-        this.language = language;
-    }
 
     @EventHandler
     public void onChat(ChatEvent event) {

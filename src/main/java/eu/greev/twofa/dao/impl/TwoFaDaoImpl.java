@@ -5,6 +5,7 @@ import eu.greev.twofa.dao.TwoFaDao;
 import eu.greev.twofa.entities.UserData;
 import eu.greev.twofa.entities.YubicoOtp;
 import eu.greev.twofa.utils.TwoFactorState;
+import lombok.RequiredArgsConstructor;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,13 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
 
+@RequiredArgsConstructor
 public class TwoFaDaoImpl implements TwoFaDao {
-
-    private HikariDataSource hikariDataSource;
-
-    public TwoFaDaoImpl(HikariDataSource hikariDataSource) {
-        this.hikariDataSource = hikariDataSource;
-    }
+    private final HikariDataSource hikariDataSource;
 
     @Override
     public void createTables() {
