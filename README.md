@@ -18,6 +18,6 @@ When everything is set, just start back up the Proxy and you can start using the
 `/2fa activate <OTP>` This command activates 2FA, it requires the OTP to prevent activation without saving the secret.  
 `/2fa disable` Disables 2FA  
 `/2fa logout` Logs you out from your «session» and requires a login to continue doing things  
-`/2fa addyubikey <Name> <OTP>` Adds a new YubiKey to your account. (Requires that 2FA is already activated with TOTP)  
-`/2fa removeyubikey <Name>` Removes the YubiKey from your Account  
-`/2fa listyubikey` Lists all active YubiKeys added to your account  
+`/2fa yubikey add <Name> <OTP>` Adds a new YubiKey to your account. (Requires that 2FA is already activated with TOTP)  
+`/2fa yubikey remove <Name>` Removes the YubiKey from your Account  
+`/2fa yubikey list` Lists all active YubiKeys added to your account  
