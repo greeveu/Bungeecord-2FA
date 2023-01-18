@@ -6,7 +6,7 @@
 
     <groupId>eu.greev</groupId>
     <artifactId>2fa</artifactId>
-    <version>1.1</version>
+    <version>2.0.0</version>
     <packaging>jar</packaging>
 
     <name>2FA</name>
@@ -85,14 +85,13 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.22</version>
+            <version>1.18.24</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
-            <scope>provided</scope>
+            <groupId>com.yubico</groupId>
+            <artifactId>yubico-validation-client2</artifactId>
+            <version>3.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>

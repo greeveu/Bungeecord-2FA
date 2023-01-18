@@ -1,7 +1,6 @@
 package eu.greev.twofa.entities;
 
 import eu.greev.twofa.utils.AuthState;
-import eu.greev.twofa.utils.TwoFactorState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -12,8 +11,8 @@ import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class Spieler {
-    private static final Map<UUID, Spieler> SPIELER_MAP = new HashMap<>();
+public class User {
+    private static final Map<UUID, User> USER_MAP = new HashMap<>();
 
     @Getter
     private final ProxiedPlayer player;
@@ -24,21 +23,17 @@ public class Spieler {
 
     @Getter
     @Setter
-    private TwoFactorState twoFactorState;
+    private UserData userData;
 
-    @Getter
-    @Setter
-    private String secret;
-
-    public static Spieler get(UUID uuid) {
-        return SPIELER_MAP.get(uuid);
+    public static User get(UUID uuid) {
+        return USER_MAP.get(uuid);
     }
 
-    public static void add(Spieler spieler) {
-        SPIELER_MAP.put(spieler.getPlayer().getUniqueId(), spieler);
+    public static void add(User user) {
+        USER_MAP.put(user.getPlayer().getUniqueId(), user);
     }
 
     public static void remove(UUID uuid) {
-        SPIELER_MAP.remove(uuid);
+        USER_MAP.remove(uuid);
     }
 }

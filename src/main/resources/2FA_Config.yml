@@ -7,6 +7,11 @@ mysql:
   database: database
   port: 3306
 
+yubico:
+  enabled: false
+  clientId: ''
+  secretKey: ''
+
 messages:
   authenabled: "&c[&42FA&c]&7 Deine Session ist abgelaufen. Daher musst du deine 2FA Code erneut bestätigen. &9Schreibe dafür deinen 6 Stelligen Code aus der App einfach in den Chat.&7 Keiner außer du wird ihn sehen."
   help: "&c[&42FA&c]&7 Mit 2FA kannst du deinen Account absichern und so verhindern da andere als du mit deinem Account hier Spielen können. Du benötigst dafür ein Handy mit Authy oder Google Authenticator. Wir helfen dir gerne bei einrichten, melde dich dafür einfach bei uns im TeamSpeak Support oder schreib uns auf Discord."
@@ -24,4 +29,18 @@ messages:
   waitingforauthcode: "&c[&42FA&c]&7 Bitte gebe zuerst deinen 6 Stelligen Code im Chat ein, bevor du diese Aktion ausführst."
   forceenable: '&c[&42FA&c]&c You need to enable 2FA before you can play. Use &e/2fa&c to enable 2FA.'
   disableforforced: '&c[&42FA&c]&c You cant disable 2FA for your account!'
+  datanull: '&c[&42FA&c]&c Daten konten nicht geladen werden! Bitte rejoin einmal und falls das nicht hilft melde dich auf dem Discord.'
+  yubikey:
+    activated: '&c[&42FA&c]&a Dein YubiKey wurde hinzugefügt!'
+    invalidcode: '&c[&42FA&c]&c Das YubiKey OTP ist ungültig!'
+    enabletotp: '&c[&42FA&c]&c Du musst TOTP erst aktiviert haben, bevor du einen YubiKey hinzufügen kannst!'
+    addyubiusage: '&c[&42FA&c]&7 Um einen YubiKey hinzuzufügen nutze den Befehlt bitte wie folgt: &l/2fa yubikey add <Name> <OTP>'
+    removeyubiusage: '&c[&42FA&c]&7 Um einen YubiKey zu entfernen nutze den Befehlt bitte wie folgt: &l/2fa yubikey remove <Name>'
+    subcommands: '&c[&42FA&c]&7 Du kannst folgende Aktionen ausführen: &f&lremove <Name>&r&7, &f&ladd <Name> <OTP> &r&7oder &f&llist'
+    disabled: '&c[&42FA&c]&c Der YubiKey Support ist von einem Administrator deaktiviert.'
+    removedkey: '&c[&42FA&c]&a Der YubiKey wurde von deinem Account entfernt.'
+    removedkeynotfound: '&c[&42FA&c]&c Dein Account hat keinen YubiKey mit dem angegebenen Namen hinterlegt.'
+    keysinaccount: '&c[&42FA&c]&7 Du hast folgende YubiKeys zu deinem Account hinzugefügt:'
+    nokeysinaccount: '&c[&42FA&c]&c Du hast keine YubiKeys zu deinem Account hinzugefügt.'
+    keylist: '&7&l- &a&l%name% &8(%publicId%)'
   hovertext: "&cLink öffnen"
