@@ -1,16 +1,16 @@
 servername: "YourServer.com"
 
 mysql:
-  host: localhost
-  username: username
-  password: password
-  database: database
+  host: "localhost"
+  username: "username"
+  password: "password"
+  database: "database"
   port: 3306
 
 yubico:
   enabled: false
-  clientId: ''
-  secretKey: ''
+  clientId: ""
+  secretKey: ""
 
 messages:
   authenabled: "&c[&42FA&c]&7 Your session has expired. Therefore you have to reconfirm your 2FA code.\n&9To do this, simply write your 6-digit code from the app in the chat.\n&7No one but you will see it."
