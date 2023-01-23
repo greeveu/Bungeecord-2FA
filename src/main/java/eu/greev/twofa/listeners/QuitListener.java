@@ -1,6 +1,6 @@
 package eu.greev.twofa.listeners;
 
-import eu.greev.twofa.entities.Spieler;
+import eu.greev.twofa.entities.User;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.event.PlayerDisconnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
@@ -16,6 +16,6 @@ public class QuitListener implements Listener {
             return;
         }
 
-        Spieler.remove(player.getUniqueId());
+        User.remove(player.getUniqueId());
     }
 }

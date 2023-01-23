@@ -1,41 +1,32 @@
 package eu.greev.twofa.commands;
 
-import eu.greev.twofa.TwoFactorAuth;
-import eu.greev.twofa.entities.Spieler;
-import eu.greev.twofa.utils.*;
+import eu.greev.twofa.service.TwoFaService;
+import eu.greev.twofa.utils.Language;
 import net.md_5.bungee.api.CommandSender;
-import net.md_5.bungee.api.ProxyServer;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.ComponentBuilder;
-import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 
-import java.security.GeneralSecurityException;
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
-public class TwoFACommand extends Command {
-    private final String helpMessage = TwoFactorAuth.getInstance().getConfig().getString("messages.help").replace("&", "§");
-    private final String alreadyActive = TwoFactorAuth.getInstance().getConfig().getString("messages.alreadyactive").replace("&", "§");
-    private final String activated = TwoFactorAuth.getInstance().getConfig().getString("messages.activated").replace("&", "§");
-    private final String removeAuth = TwoFactorAuth.getInstance().getConfig().getString("messages.removeauth").replace("&", "§");
-    private final String notLoggedIn = TwoFactorAuth.getInstance().getConfig().getString("messages.notloggedin").replace("&", "§");
-    private final String logoutMessage = TwoFactorAuth.getInstance().getConfig().getString("messages.logoutmessage").replace("&", "§");
-    private final String serverName = TwoFactorAuth.getInstance().getConfig().getString("servername").replace("&", "§");
-    private final String missingCode = TwoFactorAuth.getInstance().getConfig().getString("messages.missingcode").replace("&", "§");
-    private final String errorOccurred = TwoFactorAuth.getInstance().getConfig().getString("messages.errorocurred").replace("&", "§");
-    private final String codeIsInvalid = TwoFactorAuth.getInstance().getConfig().getString("messages.codeisinvalid").replace("&", "§");
-    private final String successfulActivated = TwoFactorAuth.getInstance().getConfig().getString("messages.successfulcctivated").replace("&", "§");
-    private final String hoverText = TwoFactorAuth.getInstance().getConfig().getString("messages.hovertext").replace("&", "§");
-    private final String disableforforced = TwoFactorAuth.getInstance().getConfig().getString("messages.disableforforced").replace("&", "§");
+public class TwoFACommand extends Command implements TabExecutor {
+    private final TwoFaService service;
+    private final Language language;
 
-    public TwoFACommand() {
+    private final String[] subCommands;
+    private final String[] yubikeySubCommands;
+
+    public TwoFACommand(TwoFaService service, Language language) {
         super("2fa");
-    }
 
-    private void sendHelpMessage(ProxiedPlayer player) {
-        player.sendMessage(new TextComponent(this.helpMessage.replace("&", "§")));
+        this.service = service;
+        this.language = language;
+
+        subCommands = new String[]{"enable", "disable", "logout", "yubikey", "activate"};
+        yubikeySubCommands = new String[]{"add", "list", "remove"};
     }
 
     @Override
@@ -51,139 +42,87 @@ public class TwoFACommand extends Command {
         }
 
         if (args.length == 0) {
-            player.sendMessage(new TextComponent(helpMessage));
+            player.sendMessage(new TextComponent(language.getHelpMessage()));
             return;
         }
 
+        findSubCommand(args, player);
+    }
+
+    private void findSubCommand(String[] args, ProxiedPlayer player) {
         switch (args[0].toLowerCase()) {
             case "enable":
-                enableTFA(player);
+                service.enableTFA(player);
                 break;
             case "disable":
-                disableTFA(player);
+                service.disableTFA(player);
                 break;
             case "logout":
-                logout(player);
+                service.logout(player);
+                break;
+            case "yubikey":
+                if (args.length >= 2) {
+                    findYubiKeySubCommand(args, player);
+                } else {
+                    player.sendMessage(new TextComponent(language.getMissingCode()));
+                }
                 break;
             case "activate":
                 if (args.length == 2) {
-                    activate(player, args[1]);
+                    service.activate(player, args[1]);
                 } else {
-                    player.sendMessage(new TextComponent(missingCode));
+                    player.sendMessage(new TextComponent(language.getMissingCode()));
                 }
                 break;
             default:
-                player.sendMessage(new TextComponent(helpMessage));
+                player.sendMessage(new TextComponent(language.getHelpMessage()));
+                break;
         }
     }
 
-    private void activate(ProxiedPlayer player, String code) {
-        String uuid = player.getUniqueId().toString();
-        Spieler spieler = Spieler.get(player.getUniqueId());
-
-        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
-            if (spieler.getTwoFactorState() != TwoFactorState.ACTIVATED) {
-                player.sendMessage(new TextComponent(notLoggedIn));
-                return;
-            }
-
-            try {
-                String secret = spieler.getSecret();
-
-                Set<String> validCodes = TwoFactorAuth.getInstance()
-                        .getTwoFactorAuthUtil()
-                        .generateNumbersWithOffset(secret, TwoFactorAuth.getMILLISECOND_TIMING_THRESHOLD());
-
-                if (!validCodes.contains(code)) {
-                    player.sendMessage(new TextComponent(codeIsInvalid));
-                    return;
+    private void findYubiKeySubCommand(String[] args, ProxiedPlayer player) {
+        switch (args[1].toLowerCase()) {
+            case "add":
+                if (args.length == 4 && args[2].length() <= 24) {
+                    service.enableYubico(player, args[2], args[3]);
+                } else {
+                    player.sendMessage(new TextComponent(language.getYubikeyAddyubiusage()));
                 }
-
-                player.sendMessage(new TextComponent(successfulActivated));
-
-                String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
-
-                MySQLMethods.setIP(uuid, hashedIp);
-                MySQLMethods.setState(uuid, TwoFactorState.ACTIVE);
-
-                spieler.setAuthState(AuthState.AUTHENTICATED);
-                spieler.setTwoFactorState(TwoFactorState.ACTIVE);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                player.sendMessage(new TextComponent(errorOccurred));
-            }
-        });
-    }
-
-    private void logout(ProxiedPlayer player) {
-        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
-            Spieler spieler = Spieler.get(player.getUniqueId());
-            if (spieler.getAuthState() == AuthState.AUTHENTICATED) {
-                player.sendMessage(new TextComponent(logoutMessage));
-                MySQLMethods.setState(player.getUniqueId().toString(), TwoFactorState.LOGOUT);
-            } else {
-                player.sendMessage(new TextComponent(notLoggedIn));
-            }
-        });
-    }
-
-    private void disableTFA(ProxiedPlayer player) {
-        if (player.hasPermission("2fa.forceenable")) {
-            player.sendMessage(new TextComponent(disableforforced));
-            return;
+                break;
+            case "remove":
+                if (args.length == 3 && args[2].length() <= 24) {
+                    service.removeYubico(player, args[2]);
+                } else {
+                    player.sendMessage(new TextComponent(language.getYubikeyRemoveyubiusage()));
+                }
+                break;
+            case "list":
+                service.listYubico(player);
+                break;
+            default:
+                player.sendMessage(new TextComponent(language.getHelpMessage()));
+                break;
         }
-        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
-            Spieler spieler = Spieler.get(player.getUniqueId());
-            if (spieler.getAuthState() == AuthState.AUTHENTICATED) {
-                MySQLMethods.removePlayer(player.getUniqueId().toString());
-                player.sendMessage(new TextComponent(removeAuth));
-            } else {
-                player.sendMessage(new TextComponent(notLoggedIn));
-            }
-        });
     }
 
-    private void enableTFA(ProxiedPlayer player) {
-        Spieler spieler = Spieler.get(player.getUniqueId());
-        ProxyServer.getInstance().getScheduler().runAsync(TwoFactorAuth.getInstance(), () -> {
-            if (spieler.getTwoFactorState() == TwoFactorState.ACTIVATED) {
-                sendEnableMessage(player, spieler.getSecret());
-                return;
-            }
-            if (spieler.getAuthState() == AuthState.AUTHENTICATED || spieler.getAuthState() == AuthState.WAITING_FOR_AUTH) {
-                player.sendMessage(new TextComponent(alreadyActive));
-                return;
-            }
-            String secret = TwoFactorAuth.getInstance().getTwoFactorAuthUtil().generateBase32Secret();
+    @Override
+    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("2fa.use")) {
+            return Collections.emptyList();
+        }
 
-            spieler.setSecret(secret);
+        if (args.length == 0) {
+            return Arrays.asList(subCommands);
+        }
 
-            String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
+        if (args.length == 1) {
+            return Arrays.stream(subCommands).filter(s -> s.startsWith(args[0])).collect(Collectors.toList());
+        }
 
-            MySQLMethods.addNewPlayer(
-                    player.getUniqueId().toString(),
-                    secret,
-                    hashedIp,
-                    TwoFactorState.ACTIVATED
-            );
+        if (args.length == 2 && args[0].equalsIgnoreCase("yubikey")) {
+            return Arrays.stream(yubikeySubCommands).filter(s -> s.startsWith(args[1])).collect(Collectors.toList());
+        }
 
-            spieler.setTwoFactorState(TwoFactorState.ACTIVATED);
-
-            sendEnableMessage(player, secret);
-        });
-    }
-
-    private void sendEnableMessage(ProxiedPlayer player, String secret) {
-        String url = TwoFactorAuthUtil.qrImageUrl(serverName.trim() + ":" + player.getName(), serverName.trim(), secret, 6, 128);
-
-        TextComponent message = new TextComponent(activated
-                .replace("%secret%", secret)
-                .replace("%link%", url)
-        );
-
-        message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new ComponentBuilder(hoverText).create()));
-        message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
-
-        player.sendMessage(message);
+        return Collections.emptyList();
     }
 }
