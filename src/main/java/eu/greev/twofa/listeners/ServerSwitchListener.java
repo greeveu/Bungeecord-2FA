@@ -36,16 +36,12 @@ public class ServerSwitchListener implements Listener {
         }
 
         switch (user.getAuthState()) {
-            case NOT_ENABLED:
-            case AUTHENTICATED:
-                //In case it's not enabled or the player is already authenticated return and don't prevent anything.
+            //In case it's not enabled or the player is already authenticated return and don't prevent anything.
+            case NOT_ENABLED, AUTHENTICATED -> {
                 return;
-            case FORCED_ENABLE:
-                player.sendMessage(new TextComponent(language.getForceenable()));
-                break;
-            case WAITING_FOR_AUTH:
-                player.sendMessage(new TextComponent(language.getWaitingForAuthCode()));
-                break;
+            }
+            case FORCED_ENABLE -> player.sendMessage(new TextComponent(language.getForceenable()));
+            case WAITING_FOR_AUTH -> player.sendMessage(new TextComponent(language.getWaitingForAuthCode()));
         }
 
         event.setCancelled(true);

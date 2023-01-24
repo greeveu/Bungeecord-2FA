@@ -35,7 +35,7 @@ public class TwoFaService {
                 VerificationResponse response = yubicoClient.verify(message);
                 String publicId = YubicoClient.getPublicId(message);
 
-                if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getPublicId().equals(publicId))) {
+                if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.publicId().equals(publicId))) {
                     saveUserAsAuthenticated(player, user);
                 } else {
                     player.sendMessage(new TextComponent(language.getYubikeyCodeInvalid()));
@@ -127,8 +127,8 @@ public class TwoFaService {
 
         user.getUserData().getYubiOtp().forEach(yubicoOtp -> player.sendMessage(
                 new TextComponent(language.getYubikeyKeylist()
-                        .replace("%name%", yubicoOtp.getName())
-                        .replace("%publicId%", yubicoOtp.getPublicId())))
+                        .replace("%name%", yubicoOtp.name())
+                        .replace("%publicId%", yubicoOtp.publicId())))
         );
     }
 
@@ -140,9 +140,9 @@ public class TwoFaService {
 
         User user = User.get(player.getUniqueId());
 
-        if (user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getName().equals(name))) {
+        if (user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.name().equals(name))) {
             ProxyServer.getInstance().getScheduler().runAsync(main, () -> {
-                user.getUserData().getYubiOtp().removeIf(yubicoOtp -> yubicoOtp.getName().equals(name));
+                user.getUserData().getYubiOtp().removeIf(yubicoOtp -> yubicoOtp.name().equals(name));
                 database.saveUserData(player.getUniqueId().toString(), user.getUserData());
                 player.sendMessage(new TextComponent(language.getYubikeyRemovedkey()));
             });

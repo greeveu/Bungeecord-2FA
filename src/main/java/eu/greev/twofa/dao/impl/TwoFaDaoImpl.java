@@ -132,8 +132,8 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
             for (YubicoOtp entity : yubicoOtps) {
                 statement.setString(1, uuid);
-                statement.setString(2, entity.getPublicId());
-                statement.setString(3, entity.getName());
+                statement.setString(2, entity.publicId());
+                statement.setString(3, entity.name());
 
                 statement.addBatch();
                 i++;
