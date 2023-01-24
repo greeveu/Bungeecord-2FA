@@ -10,7 +10,6 @@ import net.md_5.bungee.api.plugin.TabExecutor;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.stream.Collectors;
 
 public class TwoFACommand extends Command implements TabExecutor {
     private final TwoFaService service;
@@ -31,11 +30,9 @@ public class TwoFACommand extends Command implements TabExecutor {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if (!(sender instanceof ProxiedPlayer)) {
+        if (!(sender instanceof ProxiedPlayer player)) {
             return;
         }
-
-        ProxiedPlayer player = (ProxiedPlayer) sender;
 
         if (!player.hasPermission("2fa.use")) {
             return;
@@ -51,57 +48,45 @@ public class TwoFACommand extends Command implements TabExecutor {
 
     private void findSubCommand(String[] args, ProxiedPlayer player) {
         switch (args[0].toLowerCase()) {
-            case "enable":
-                service.enableTFA(player);
-                break;
-            case "disable":
-                service.disableTFA(player);
-                break;
-            case "logout":
-                service.logout(player);
-                break;
-            case "yubikey":
+            case "enable" -> service.enableTFA(player);
+            case "disable" -> service.disableTFA(player);
+            case "logout" -> service.logout(player);
+            case "yubikey" -> {
                 if (args.length >= 2) {
                     findYubiKeySubCommand(args, player);
                 } else {
                     player.sendMessage(new TextComponent(language.getMissingCode()));
                 }
-                break;
-            case "activate":
+            }
+            case "activate" -> {
                 if (args.length == 2) {
                     service.activate(player, args[1]);
                 } else {
                     player.sendMessage(new TextComponent(language.getMissingCode()));
                 }
-                break;
-            default:
-                player.sendMessage(new TextComponent(language.getHelpMessage()));
-                break;
+            }
+            default -> player.sendMessage(new TextComponent(language.getHelpMessage()));
         }
     }
 
     private void findYubiKeySubCommand(String[] args, ProxiedPlayer player) {
         switch (args[1].toLowerCase()) {
-            case "add":
+            case "add" -> {
                 if (args.length == 4 && args[2].length() <= 24) {
                     service.enableYubico(player, args[2], args[3]);
                 } else {
                     player.sendMessage(new TextComponent(language.getYubikeyAddyubiusage()));
                 }
-                break;
-            case "remove":
+            }
+            case "remove" -> {
                 if (args.length == 3 && args[2].length() <= 24) {
                     service.removeYubico(player, args[2]);
                 } else {
                     player.sendMessage(new TextComponent(language.getYubikeyRemoveyubiusage()));
                 }
-                break;
-            case "list":
-                service.listYubico(player);
-                break;
-            default:
-                player.sendMessage(new TextComponent(language.getHelpMessage()));
-                break;
+            }
+            case "list" -> service.listYubico(player);
+            default -> player.sendMessage(new TextComponent(language.getHelpMessage()));
         }
     }
 
@@ -116,11 +101,11 @@ public class TwoFACommand extends Command implements TabExecutor {
         }
 
         if (args.length == 1) {
-            return Arrays.stream(subCommands).filter(s -> s.startsWith(args[0])).collect(Collectors.toList());
+            return Arrays.stream(subCommands).filter(s -> s.startsWith(args[0])).toList();
         }
 
         if (args.length == 2 && args[0].equalsIgnoreCase("yubikey")) {
-            return Arrays.stream(yubikeySubCommands).filter(s -> s.startsWith(args[1])).collect(Collectors.toList());
+            return Arrays.stream(yubikeySubCommands).filter(s -> s.startsWith(args[1])).toList();
         }
 
         return Collections.emptyList();
