@@ -19,7 +19,8 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public void createTables() {
-        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_players`\n" +
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_players`\n" +
                 "(\n" +
                 "    `uuid`    varchar(64) NOT NULL,\n" +
                 "    `secret`  varchar(16) NOT NULL,\n" +
@@ -32,15 +33,16 @@ public class TwoFaDaoImpl implements TwoFaDao {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_yubikey`\n" +
-                "(\n" +
-                "    `uuid`      varchar(36) NOT NULL,\n" +
-                "    `public_id` varchar(16) NOT NULL,\n" +
-                "    `name`      varchar(24) NOT NULL,\n" +
-                "    PRIMARY KEY (`uuid`, `public_" +
-                "id`)\n" +
-                ") ENGINE = InnoDB\n" +
-                "  DEFAULT CHARSET = utf8mb4;")) {
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement("CREATE TABLE IF NOT EXISTS `2fa_yubikey`\n" +
+                     "(\n" +
+                     "    `uuid`      varchar(36) NOT NULL,\n" +
+                     "    `public_id` varchar(16) NOT NULL,\n" +
+                     "    `name`      varchar(24) NOT NULL,\n" +
+                     "    PRIMARY KEY (`uuid`, `public_" +
+                     "id`)\n" +
+                     ") ENGINE = InnoDB\n" +
+                     "  DEFAULT CHARSET = utf8mb4;")) {
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -88,7 +90,8 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public void saveUserData(String uuid, UserData user) {
-        try (PreparedStatement preparedStatement = hikariDataSource.getConnection().prepareStatement("INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`, `status`)\n" +
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO `2fa_players`(`uuid`, `secret`, `last_ip`, `status`)\n" +
                 "VALUES (?, ?, ?, ?)\n" +
                 "ON DUPLICATE KEY UPDATE `secret`  = values(secret),\n" +
                 "                        `last_ip` = values(`last_ip`),\n" +
@@ -108,7 +111,8 @@ public class TwoFaDaoImpl implements TwoFaDao {
 
     @Override
     public void deleteUser(String uuid) {
-        try (PreparedStatement ps = hikariDataSource.getConnection().prepareStatement("DELETE FROM `2fa_players` WHERE `uuid` = ?")) {
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement ps = connection.prepareStatement("DELETE FROM `2fa_players` WHERE `uuid` = ?")) {
             ps.setString(1, uuid);
 
             ps.executeUpdate();
@@ -122,7 +126,8 @@ public class TwoFaDaoImpl implements TwoFaDao {
             return;
         }
 
-        try (PreparedStatement statement = hikariDataSource.getConnection().prepareStatement("INSERT INTO `2fa_yubikey`(`uuid`, `public_id`, `name`)\n" +
+        try (Connection connection = hikariDataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement("INSERT INTO `2fa_yubikey`(`uuid`, `public_id`, `name`)\n" +
                 "VALUES (?, ?, ?)\n" +
                 "ON DUPLICATE KEY UPDATE `uuid`  = values(uuid),\n" +
                 "                        `public_id` = values(`public_id`),\n" +
