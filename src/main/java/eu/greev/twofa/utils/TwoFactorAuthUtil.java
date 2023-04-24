@@ -36,15 +36,7 @@ public class TwoFactorAuthUtil {
      */
     private static final int NUM_DIGITS_OUTPUT = 6;
 
-    private final String blockOfZeros;
-
-    {
-        StringBuilder sb = new StringBuilder(NUM_DIGITS_OUTPUT);
-        for (int i = 0; i < NUM_DIGITS_OUTPUT; i++) {
-            sb.append('0');
-        }
-        blockOfZeros = sb.toString();
-    }
+    private final String blockOfZeros = "0".repeat(NUM_DIGITS_OUTPUT);
 
     /**
      * Generate a secret key in base32 format (A-Z2-7)
@@ -209,59 +201,59 @@ public class TwoFactorAuthUtil {
              * There are probably better ways to do this but this seemed the most straightforward.
              */
             switch (which) {
-                case 0:
+                case 0 -> {
                     // all 5 bits is top 5 bits
                     working = (val & 0x1F) << 3;
                     which = 1;
-                    break;
-                case 1:
+                }
+                case 1 -> {
                     // top 3 bits is lower 3 bits
                     working |= (val & 0x1C) >> 2;
                     result[resultIndex++] = (byte) working;
                     // lower 2 bits is upper 2 bits
                     working = (val & 0x03) << 6;
                     which = 2;
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     // all 5 bits is mid 5 bits
                     working |= (val & 0x1F) << 1;
                     which = 3;
-                    break;
-                case 3:
+                }
+                case 3 -> {
                     // top 1 bit is lowest 1 bit
                     working |= (val & 0x10) >> 4;
                     result[resultIndex++] = (byte) working;
                     // lower 4 bits is top 4 bits
                     working = (val & 0x0F) << 4;
                     which = 4;
-                    break;
-                case 4:
+                }
+                case 4 -> {
                     // top 4 bits is lowest 4 bits
                     working |= (val & 0x1E) >> 1;
                     result[resultIndex++] = (byte) working;
                     // lower 1 bit is top 1 bit
                     working = (val & 0x01) << 7;
                     which = 5;
-                    break;
-                case 5:
+                }
+                case 5 -> {
                     // all 5 bits is mid 5 bits
                     working |= (val & 0x1F) << 2;
                     which = 6;
-                    break;
-                case 6:
+                }
+                case 6 -> {
                     // top 2 bits is lowest 2 bits
                     working |= (val & 0x18) >> 3;
                     result[resultIndex++] = (byte) working;
                     // lower 3 bits of byte 6 is top 3 bits
                     working = (val & 0x07) << 5;
                     which = 7;
-                    break;
-                case 7:
+                }
+                case 7 -> {
                     // all 5 bits is lower 5 bits
                     working |= (val & 0x1F);
                     result[resultIndex++] = (byte) working;
                     which = 0;
-                    break;
+                }
             }
         }
         if (which != 0) {

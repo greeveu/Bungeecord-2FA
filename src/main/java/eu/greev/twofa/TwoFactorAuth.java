@@ -32,7 +32,6 @@ public final class TwoFactorAuth extends Plugin {
 
     private TwoFaDao twoFaDao;
     private Configuration config;
-    private TwoFactorAuthUtil twoFactorAuthUtil;
     private HikariDataSource hikariDataSource;
     private YubicoClient yubicoClient;
     private Language language;
@@ -53,7 +52,7 @@ public final class TwoFactorAuth extends Plugin {
         if (config.getBoolean("yubico.enabled", false)) {
             yubicoClient = YubicoClient.getClient(config.getInt("yubico.clientId"), config.getString("yubico.secretKey"));
         }
-        twoFactorAuthUtil = new TwoFactorAuthUtil();
+        TwoFactorAuthUtil twoFactorAuthUtil = new TwoFactorAuthUtil();
         twoFactorApi = new APIImpl(twoFaDao);
         twoFaService = new TwoFaService(this, twoFaDao, yubicoClient, twoFactorAuthUtil, language);
 
