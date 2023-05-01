@@ -107,15 +107,11 @@ public class TwoFaService {
         return completableFuture;
     }
 
-    private void sendPlayerToAuthServer(ProxiedPlayer player) {
-        authServerService.getAuthServer().ifPresent(player::connect);
-    }
-
     public void logUserIn(ProxiedPlayer player, User user) {
         saveUserAsAuthenticated(player, user);
 
         if (authServerService.isEnabled()) {
-            ProxyServer.getInstance().getPluginManager().dispatchCommand(player, "hub");
+            ProxyServer.getInstance().getPluginManager().dispatchCommand(player, authServerService.getSuccessCommand());
         }
     }
 
