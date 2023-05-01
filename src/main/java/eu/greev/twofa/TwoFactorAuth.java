@@ -11,6 +11,7 @@ import eu.greev.twofa.dao.impl.TwoFaDaoImpl;
 import eu.greev.twofa.listeners.ChatListener;
 import eu.greev.twofa.listeners.QuitListener;
 import eu.greev.twofa.listeners.ServerSwitchListener;
+import eu.greev.twofa.service.AuthServerService;
 import eu.greev.twofa.service.TwoFaService;
 import eu.greev.twofa.utils.ConfigUtils;
 import eu.greev.twofa.utils.Language;
@@ -21,7 +22,6 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public final class TwoFactorAuth extends Plugin {
 
@@ -31,14 +31,12 @@ public final class TwoFactorAuth extends Plugin {
     @Getter
     private TwoFaService twoFaService;
 
-    @Getter
-    private Optional<String> authServer;
-
     private TwoFaDao twoFaDao;
     private Configuration config;
     private TwoFactorAuthUtil twoFactorAuthUtil;
     private HikariDataSource hikariDataSource;
     private YubicoClient yubicoClient;
+    private AuthServerService authServerService;
     private Language language;
 
     @Override
@@ -58,13 +56,10 @@ public final class TwoFactorAuth extends Plugin {
             yubicoClient = YubicoClient.getClient(config.getInt("yubico.clientId"), config.getString("yubico.secretKey"));
         }
 
-        if (config.getBoolean("authserver.enabled", false)) {
-            authServer = Optional.ofNullable(config.getString("authserver.name"));
-        }
-
         twoFactorAuthUtil = new TwoFactorAuthUtil();
         twoFactorApi = new APIImpl(twoFaDao);
-        twoFaService = new TwoFaService(this, twoFaDao, yubicoClient, twoFactorAuthUtil, language);
+        authServerService = new AuthServerService(config.getBoolean("authserver.enabled", false), config.getBoolean("authserver.forceBlockingJoin", true), config.getString("authserver.name"), config.getString("authserver.successCommand"));
+        twoFaService = new TwoFaService(this, twoFaDao, yubicoClient, authServerService, twoFactorAuthUtil, language);
 
         this.registerCommands();
         this.registerEvents();
@@ -89,7 +84,7 @@ public final class TwoFactorAuth extends Plugin {
     private void registerEvents() {
         ProxyServer.getInstance().getPluginManager().registerListener(this, new ChatListener(twoFaService, language));
         ProxyServer.getInstance().getPluginManager().registerListener(this, new QuitListener());
-        ProxyServer.getInstance().getPluginManager().registerListener(this, new ServerSwitchListener(twoFaService, language));
+        ProxyServer.getInstance().getPluginManager().registerListener(this, new ServerSwitchListener(twoFaService, authServerService, language));
     }
 
     private void registerCommands() {

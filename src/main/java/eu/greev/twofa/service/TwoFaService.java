@@ -16,21 +16,20 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.security.GeneralSecurityException;
-import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 public class TwoFaService {
     private final TwoFactorAuth main;
     private final TwoFaDao database;
     private final YubicoClient yubicoClient;
+    private final AuthServerService authServerService;
     private final TwoFactorAuthUtil twoFactorAuthUtil;
     private final Language language;
-    private ServerInfo authServerCache;
 
     public void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
         ProxyServer.getInstance().getScheduler().runAsync(main, () -> {
@@ -39,7 +38,7 @@ public class TwoFaService {
                 String publicId = YubicoClient.getPublicId(message);
 
                 if (response.isOk() && user.getUserData().getYubiOtp().stream().anyMatch(yubicoOtp -> yubicoOtp.getPublicId().equals(publicId))) {
-                    saveUserAsAuthenticated(player, user);
+                    logUserIn(player, user);
                 } else {
                     player.sendMessage(new TextComponent(language.getYubikeyCodeInvalid()));
                 }
@@ -58,7 +57,7 @@ public class TwoFaService {
                 Set<String> validCodes = twoFactorAuthUtil.generateNumbersWithOffset(secret, TwoFactorAuthUtil.TIME_STEP_SECONDS);
 
                 if (validCodes.contains(message)) {
-                    saveUserAsAuthenticated(player, user);
+                    logUserIn(player, user);
                 } else {
                     player.sendMessage(new TextComponent(language.getCodeIsInvalid()));
                 }
@@ -69,39 +68,58 @@ public class TwoFaService {
         });
     }
 
-    public void asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, User user) {
+    public CompletableFuture<User> asyncDatabaseAndPlayerUpdate(ProxiedPlayer player, User user) {
+        CompletableFuture<User> completableFuture = new CompletableFuture<>();
         ProxyServer.getInstance().getScheduler().runAsync(main, () -> {
             UserData userData = database.loadUserData(player.getUniqueId().toString());
 
             //Remove the player if he hasn't 2fa enabled
             if (userData == null) {
                 user.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
+                completableFuture.complete(user);
                 return;
             }
 
             user.setUserData(userData);
 
             if (userData.getLastIpHash() == null || userData.getLastIpHash().isEmpty()) {
+                completableFuture.complete(user);
                 return;
             }
 
             if (userData.getStatus() == TwoFactorState.ACTIVATED) {
                 player.sendMessage(new TextComponent(language.getNeedToActivate()));
                 user.setAuthState(player.hasPermission("2fa.forceenable") ? AuthState.FORCED_ENABLE : AuthState.NOT_ENABLED);
+                completableFuture.complete(user);
                 return;
             }
 
             String hasedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
             if (userData.getLastIpHash().equals(hasedIp) && userData.getStatus() == TwoFactorState.ACTIVE) {
                 user.setAuthState(AuthState.AUTHENTICATED);
+                completableFuture.complete(user);
                 return;
             }
 
             player.sendMessage(new TextComponent(language.getAuthEnabled()));
+            completableFuture.complete(user);
         });
+        return completableFuture;
     }
 
-    public void saveUserAsAuthenticated(ProxiedPlayer player, User user) {
+    private void sendPlayerToAuthServer(ProxiedPlayer player) {
+        authServerService.getAuthServer().ifPresent(player::connect);
+    }
+
+    public void logUserIn(ProxiedPlayer player, User user) {
+        saveUserAsAuthenticated(player, user);
+
+        if (authServerService.isEnabled()) {
+            ProxyServer.getInstance().getPluginManager().dispatchCommand(player, "hub");
+        }
+    }
+
+    private void saveUserAsAuthenticated(ProxiedPlayer player, User user) {
         String hashedIp = HashingUtils.hashIp(player.getPendingConnection().getAddress().getAddress().toString());
 
         user.setAuthState(AuthState.AUTHENTICATED);
@@ -237,6 +255,8 @@ public class TwoFaService {
 
                 database.saveUserData(player.getUniqueId().toString(), user.getUserData());
 
+                authServerService.getAuthServer().ifPresent(player::connect);
+
                 player.sendMessage(new TextComponent(language.getLogoutMessage()));
             } else {
                 player.sendMessage(new TextComponent(language.getNotLoggedIn()));
@@ -316,17 +336,6 @@ public class TwoFaService {
         message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
 
         player.sendMessage(message);
-    }
-
-    public Optional<ServerInfo> getAuthServer() {
-        if (authServerCache == null) {
-            authServerCache = ProxyServer.getInstance().getServerInfo(main.getAuthServer().get());
-        }
-
-        if (main.getAuthServer().isPresent()) {
-            return Optional.ofNullable(authServerCache);
-        }
-        return Optional.empty();
     }
 
 }
