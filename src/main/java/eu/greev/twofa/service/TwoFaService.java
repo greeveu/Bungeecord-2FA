@@ -16,9 +16,11 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.config.ServerInfo;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 import java.util.Set;
 
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class TwoFaService {
     private final YubicoClient yubicoClient;
     private final TwoFactorAuthUtil twoFactorAuthUtil;
     private final Language language;
+    private ServerInfo authServerCache;
 
     public void verifyYubiOtp(ProxiedPlayer player, User user, String message) {
         ProxyServer.getInstance().getScheduler().runAsync(main, () -> {
@@ -313,6 +316,17 @@ public class TwoFaService {
         message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
 
         player.sendMessage(message);
+    }
+
+    public Optional<ServerInfo> getAuthServer() {
+        if (authServerCache == null) {
+            authServerCache = ProxyServer.getInstance().getServerInfo(main.getAuthServer().get());
+        }
+
+        if (main.getAuthServer().isPresent()) {
+            return Optional.ofNullable(authServerCache);
+        }
+        return Optional.empty();
     }
 
 }

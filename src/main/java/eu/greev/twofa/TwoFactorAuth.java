@@ -21,6 +21,7 @@ import net.md_5.bungee.api.plugin.Plugin;
 import net.md_5.bungee.config.Configuration;
 
 import java.io.IOException;
+import java.util.Optional;
 
 public final class TwoFactorAuth extends Plugin {
 
@@ -29,6 +30,9 @@ public final class TwoFactorAuth extends Plugin {
 
     @Getter
     private TwoFaService twoFaService;
+
+    @Getter
+    private Optional<String> authServer;
 
     private TwoFaDao twoFaDao;
     private Configuration config;
@@ -53,6 +57,11 @@ public final class TwoFactorAuth extends Plugin {
         if (config.getBoolean("yubico.enabled", false)) {
             yubicoClient = YubicoClient.getClient(config.getInt("yubico.clientId"), config.getString("yubico.secretKey"));
         }
+
+        if (config.getBoolean("authserver.enabled", false)) {
+            authServer = Optional.ofNullable(config.getString("authserver.name"));
+        }
+
         twoFactorAuthUtil = new TwoFactorAuthUtil();
         twoFactorApi = new APIImpl(twoFaDao);
         twoFaService = new TwoFaService(this, twoFaDao, yubicoClient, twoFactorAuthUtil, language);

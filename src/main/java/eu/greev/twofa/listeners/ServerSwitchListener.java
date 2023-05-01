@@ -31,7 +31,12 @@ public class ServerSwitchListener implements Listener {
         }
 
         if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
+            service.getAuthServer().ifPresent(player::connect);
             service.asyncDatabaseAndPlayerUpdate(player, user);
+            return;
+        }
+
+        if (service.getAuthServer().isPresent() && service.getAuthServer().get().equals(event.getTarget())) {
             return;
         }
 
