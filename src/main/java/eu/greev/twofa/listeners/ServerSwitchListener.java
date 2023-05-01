@@ -1,7 +1,9 @@
 package eu.greev.twofa.listeners;
 
 import eu.greev.twofa.entities.User;
+import eu.greev.twofa.service.AuthServerService;
 import eu.greev.twofa.service.TwoFaService;
+import eu.greev.twofa.utils.AuthState;
 import eu.greev.twofa.utils.Language;
 import lombok.RequiredArgsConstructor;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -10,9 +12,12 @@ import net.md_5.bungee.api.event.ServerConnectEvent;
 import net.md_5.bungee.api.plugin.Listener;
 import net.md_5.bungee.event.EventHandler;
 
+import java.util.concurrent.CompletableFuture;
+
 @RequiredArgsConstructor
 public class ServerSwitchListener implements Listener {
     private final TwoFaService service;
+    private final AuthServerService authServerService;
     private final Language language;
 
     @EventHandler
@@ -31,7 +36,14 @@ public class ServerSwitchListener implements Listener {
         }
 
         if (event.getReason().equals(ServerConnectEvent.Reason.JOIN_PROXY)) {
-            service.asyncDatabaseAndPlayerUpdate(player, user);
+            CompletableFuture<User> future = service.asyncDatabaseAndPlayerUpdate(player, user);
+            if (authServerService.isEnabled()) {
+                handleAuthServer(event, player, future);
+            }
+            return;
+        }
+
+        if (authServerService.getAuthServer().isPresent() && authServerService.getAuthServer().get().equals(event.getTarget())) {
             return;
         }
 
@@ -49,5 +61,22 @@ public class ServerSwitchListener implements Listener {
         }
 
         event.setCancelled(true);
+    }
+
+    private void handleAuthServer(ServerConnectEvent event, ProxiedPlayer player, CompletableFuture<User> future) {
+        if (authServerService.isForceBlockingJoin()) {
+            User u = future.join();
+            if (u.getAuthState() == AuthState.NOT_ENABLED || u.getAuthState() == AuthState.AUTHENTICATED) {
+                return;
+            }
+            authServerService.getAuthServer().ifPresent(event::setTarget);
+        } else {
+            future.thenAccept(u -> {
+                if (u.getAuthState() == AuthState.NOT_ENABLED || u.getAuthState() == AuthState.AUTHENTICATED) {
+                    return;
+                }
+                authServerService.getAuthServer().ifPresent(player::connect);
+            });
+        }
     }
 }

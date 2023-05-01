@@ -12,6 +12,10 @@ yubico:
   clientId: ""
   secretKey: ""
 
+authserver:
+  enabled: false
+  name: "auth"
+
 messages:
   authenabled: "&c[&42FA&c]&7 Your session has expired. Therefore you have to reconfirm your 2FA code.\n&9To do this, simply write your 6-digit code from the app in the chat.\n&7No one but you will see it."
   help: "&c[&42FA&c]&7 With 2FA you can secure your account and prevent others than you from playing here with your account. You'll need a mobile phone with Authy or Google Authenticator. We are happy to help you with the setup, just contact us on Discord."
