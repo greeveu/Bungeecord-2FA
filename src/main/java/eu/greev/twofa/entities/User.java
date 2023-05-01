@@ -19,7 +19,7 @@ public class User {
 
     @Getter
     @Setter
-    private AuthState authState;
+    private AuthState authState = AuthState.WAITING_FOR_AUTH;
 
     @Getter
     @Setter
