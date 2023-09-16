@@ -23,7 +23,7 @@ public class User {
 
     @Getter
     @Setter
-    private UserData userData;
+    private UserData userData = new UserData();
 
     public static User get(UUID uuid) {
         return USER_MAP.get(uuid);
